@@ -177,85 +177,88 @@ export function FinancialTrackerDashboard({ transactions, categories, settings }
         <main className="min-h-screen bg-background">
             <div className="container mx-auto px-4 py-8 max-w-7xl">
                 {/* Header */}
-                <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-primary">
-                            <Wallet className="h-6 w-6 text-primary-foreground" />
+                <header className="flex flex-col gap-4 mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary">
+                                <Wallet className="h-6 w-6 text-primary-foreground" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold tracking-tight">FinTrack</h1>
+                                <p className="text-sm text-muted-foreground">
+                                    Personal Finance Tracker
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight">FinTrack</h1>
-                            <p className="text-sm text-muted-foreground">
-                                Personal Finance Tracker
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Popover open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" size="icon">
-                                    <Settings className="h-4 w-4" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80">
-                                <div className="grid gap-4">
-                                    <div className="space-y-2">
-                                        <h4 className="font-medium leading-none">Settings</h4>
-                                        <p className="text-sm text-muted-foreground">
-                                            Configure your financial preferences.
-                                        </p>
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <div className="grid grid-cols-3 items-center gap-4">
-                                            <Label htmlFor="startDay">Start Day</Label>
-                                            <Input
-                                                id="startDay"
-                                                type="number"
-                                                min={1}
-                                                max={31}
-                                                value={tempStartDay}
-                                                onChange={(e) => {
-                                                    const val = parseInt(e.target.value)
-                                                    if (val >= 1 && val <= 31) {
-                                                        setTempStartDay(val)
-                                                    }
-                                                }}
-                                                className="col-span-2 h-8"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-3 items-center gap-4">
-                                            <Label htmlFor="currency">Currency</Label>
-                                            <Select value={tempCurrency} onValueChange={setTempCurrency}>
-                                                <SelectTrigger id="currency" className="col-span-2 h-8">
-                                                    <SelectValue placeholder="Select currency" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {CURRENCIES.map((c) => (
-                                                        <SelectItem key={c.value} value={c.value}>
-                                                            {c.label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <Button size="sm" onClick={handleSaveSettings}>Save Changes</Button>
-                                    </div>
-                                </div>
-                            </PopoverContent>
-                        </Popover>
 
-                        <Select value={selectedCycleStart} onValueChange={setSelectedCycleStart}>
-                            <SelectTrigger className="w-[240px]">
-                                <SelectValue placeholder="Select period" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {months.map((month) => (
-                                    <SelectItem key={month.value} value={month.value}>
-                                        {month.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <TransactionForm categories={categories} currency={currency} />
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Popover open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" size="icon">
+                                        <Settings className="h-4 w-4" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80">
+                                    <div className="grid gap-4">
+                                        <div className="space-y-2">
+                                            <h4 className="font-medium leading-none">Settings</h4>
+                                            <p className="text-sm text-muted-foreground">
+                                                Configure your financial preferences.
+                                            </p>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <div className="grid grid-cols-3 items-center gap-4">
+                                                <Label htmlFor="startDay">Start Day</Label>
+                                                <Input
+                                                    id="startDay"
+                                                    type="number"
+                                                    min={1}
+                                                    max={31}
+                                                    value={tempStartDay}
+                                                    onChange={(e) => {
+                                                        const val = parseInt(e.target.value)
+                                                        if (val >= 1 && val <= 31) {
+                                                            setTempStartDay(val)
+                                                        }
+                                                    }}
+                                                    className="col-span-2 h-8"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-3 items-center gap-4">
+                                                <Label htmlFor="currency">Currency</Label>
+                                                <Select value={tempCurrency} onValueChange={setTempCurrency}>
+                                                    <SelectTrigger id="currency" className="col-span-2 h-8">
+                                                        <SelectValue placeholder="Select currency" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {CURRENCIES.map((c) => (
+                                                            <SelectItem key={c.value} value={c.value}>
+                                                                {c.label}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <Button size="sm" onClick={handleSaveSettings}>Save Changes</Button>
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+
+                            <Select value={selectedCycleStart} onValueChange={setSelectedCycleStart}>
+                                <SelectTrigger className="w-[180px] sm:w-[240px]">
+                                    <SelectValue placeholder="Select period" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {months.map((month) => (
+                                        <SelectItem key={month.value} value={month.value}>
+                                            {month.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <TransactionForm categories={categories} currency={currency} />
+                        </div>
                     </div>
                 </header>
 
