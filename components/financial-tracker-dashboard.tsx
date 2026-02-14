@@ -9,7 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { addMonths, format, setDate, startOfMonth, subMonths } from "date-fns"
+import { format } from "date-fns"
 
 import { TransactionForm } from "@/components/transaction-form"
 import { TransferForm } from "@/components/transfer-form"
@@ -17,8 +17,10 @@ import { SummaryCards } from "@/components/summary-cards"
 import { TransactionsList } from "@/components/transactions-list"
 import { ExpenseChart } from "@/components/expense-chart"
 import { CategoryBreakdown } from "@/components/category-breakdown"
+import { DateRangeNavigator } from "@/components/date-range-navigator"
 import { Wallet } from "lucide-react"
 import { Transaction, Category, Account } from "@/lib/definitions"
+import { getCycleStartDate } from "@/lib/date-utils"
 
 
 type FinancialTrackerDashboardProps = {
@@ -45,39 +47,14 @@ export function FinancialTrackerDashboard({ transactions, categories, settings, 
     // Account Selection: Default to first account or "all"
     const [selectedAccountId, setSelectedAccountId] = useState<string>(accounts[0]?.id || "all")
 
-    // Helper to get the cycle for a given date based on start day
-    const getCycleStartDate = (dateStr: string) => {
-        const date = new Date(dateStr)
-        const day = date.getDate()
-
-        let cycleStart = new Date(date.getFullYear(), date.getMonth(), cycleStartDay)
-
-        const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
-        if (cycleStartDay > daysInMonth) {
-            cycleStart = new Date(date.getFullYear(), date.getMonth(), daysInMonth)
-        }
-
-        if (day < cycleStart.getDate()) {
-            cycleStart = subMonths(cycleStart, 1)
-            const prevMonthDays = new Date(cycleStart.getFullYear(), cycleStart.getMonth() + 1, 0).getDate()
-            if (cycleStartDay > prevMonthDays) {
-                cycleStart.setDate(prevMonthDays);
-            } else {
-                cycleStart.setDate(cycleStartDay);
-            }
-        }
-
-        return format(cycleStart, "yyyy-MM-dd")
-    }
-
     // Default to current cycle
     const [selectedCycleStart, setSelectedCycleStart] = useState(() => {
-        return getCycleStartDate(new Date().toISOString().split("T")[0])
+        return getCycleStartDate(new Date().toISOString().split("T")[0], cycleStartDay)
     })
 
     // Filter Transactions by Cycle AND Account
     const filteredTransactions = transactions.filter((t) => {
-        const txCycleStart = getCycleStartDate(t.date)
+        const txCycleStart = getCycleStartDate(t.date, cycleStartDay)
         const inCycle = txCycleStart === selectedCycleStart
 
         let inAccount = true
@@ -87,80 +64,6 @@ export function FinancialTrackerDashboard({ transactions, categories, settings, 
 
         return inCycle && inAccount
     })
-
-    // Generate month options dynamically based on available data + some buffer
-    const generateMonthOptions = () => {
-        const today = new Date()
-
-        // Find the start date of the CURRENT cycle
-        const currentCycleStartStr = getCycleStartDate(format(today, "yyyy-MM-dd"));
-        const currentCycleStart = new Date(currentCycleStartStr);
-
-        // We want to show a range of cycles.
-        // e.g. 1 future cycle, current cycle, and 11 past cycles
-        const cyclesToShow = 13;
-        const futureCycles = 1;
-
-        // Generate a base list of start dates
-        // Start from (Current + futureCycles) down to (Current - (cyclesToShow - futureCycles))
-        const cycleStarts: Date[] = [];
-
-        // Start with the furthest future cycle
-        let iterDate = new Date(currentCycleStart);
-        // Advance to furthest future
-        for (let i = 0; i < futureCycles; i++) {
-            iterDate = addMonths(iterDate, 1);
-            const daysInMonth = new Date(iterDate.getFullYear(), iterDate.getMonth() + 1, 0).getDate();
-            if (cycleStartDay > daysInMonth) {
-                iterDate.setDate(daysInMonth);
-            } else {
-                iterDate.setDate(cycleStartDay);
-            }
-        }
-
-        // Now push 'cyclesToShow' number of cycles moving backwards
-        for (let i = 0; i < cyclesToShow; i++) {
-            cycleStarts.push(new Date(iterDate));
-
-            // Move back 1 month
-            iterDate = subMonths(iterDate, 1);
-            const daysInMonth = new Date(iterDate.getFullYear(), iterDate.getMonth() + 1, 0).getDate();
-            if (cycleStartDay > daysInMonth) {
-                iterDate.setDate(daysInMonth);
-            } else {
-                iterDate.setDate(cycleStartDay);
-            }
-        }
-
-        const options = [];
-
-        // Recalculate the "Next" cycle for the very first item to get its end date
-        let nextCycleStart = addMonths(cycleStarts[0], 1);
-        const daysInNextMonth = new Date(nextCycleStart.getFullYear(), nextCycleStart.getMonth() + 1, 0).getDate();
-        if (cycleStartDay > daysInNextMonth) {
-            nextCycleStart.setDate(daysInNextMonth);
-        } else {
-            nextCycleStart.setDate(cycleStartDay);
-        }
-
-        for (const start of cycleStarts) {
-            const end = new Date(nextCycleStart);
-            end.setDate(end.getDate() - 1);
-
-            const label = `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`;
-
-            options.push({
-                value: format(start, "yyyy-MM-dd"),
-                label: label
-            });
-
-            nextCycleStart = start;
-        }
-
-        return options;
-    }
-
-    const months = generateMonthOptions()
 
     return (
         <main className="min-h-screen bg-background">
@@ -195,18 +98,11 @@ export function FinancialTrackerDashboard({ transactions, categories, settings, 
                                 </SelectContent>
                             </Select>
 
-                            <Select value={selectedCycleStart} onValueChange={setSelectedCycleStart}>
-                                <SelectTrigger className="w-[180px] sm:w-[240px]">
-                                    <SelectValue placeholder="Select period" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {months.map((month) => (
-                                        <SelectItem key={month.value} value={month.value}>
-                                            {month.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <DateRangeNavigator
+                                cycleStartDay={cycleStartDay}
+                                selectedDate={selectedCycleStart}
+                                onDateChange={setSelectedCycleStart}
+                            />
 
                             <TransferForm accounts={accounts} />
 
