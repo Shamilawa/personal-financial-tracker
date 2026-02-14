@@ -30,6 +30,8 @@ export const metadata: Metadata = {
   },
 }
 
+import { AppSidebar } from "@/components/app-sidebar"
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,7 +40,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        {children}
+        <div className="flex h-screen overflow-hidden">
+          <AppSidebar />
+          <main className="flex-1 overflow-auto md:ml-[250px] bg-background w-full">
+            {children}
+          </main>
+        </div>
         <Analytics />
       </body>
     </html>

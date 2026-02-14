@@ -1,22 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Calendar, Settings } from "lucide-react"
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { addMonths, format, setDate, startOfMonth, subMonths } from "date-fns"
-
-import { TransactionForm } from "@/components/transaction-form"
-import { SummaryCards } from "@/components/summary-cards"
-import { TransactionsList } from "@/components/transactions-list"
-import { ExpenseChart } from "@/components/expense-chart"
-import { CategoryBreakdown } from "@/components/category-breakdown"
+import { Calendar } from "lucide-react"
 import {
     Select,
     SelectContent,
@@ -24,15 +9,23 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { addMonths, format, setDate, startOfMonth, subMonths } from "date-fns"
+
+import { TransactionForm } from "@/components/transaction-form"
+import { TransferForm } from "@/components/transfer-form"
+import { SummaryCards } from "@/components/summary-cards"
+import { TransactionsList } from "@/components/transactions-list"
+import { ExpenseChart } from "@/components/expense-chart"
+import { CategoryBreakdown } from "@/components/category-breakdown"
 import { Wallet } from "lucide-react"
-import { Transaction, Category } from "@/lib/definitions"
-import { updateSettings } from "@/lib/actions"
-import { toast } from "sonner"
+import { Transaction, Category, Account } from "@/lib/definitions"
+
 
 type FinancialTrackerDashboardProps = {
     transactions: Transaction[];
     categories: Category[];
     settings: { cycle_start_day: number; currency: string };
+    accounts: Account[];
 }
 
 const CURRENCIES = [
@@ -45,12 +38,12 @@ const CURRENCIES = [
     { value: "CAD", label: "CAD ($)" },
 ];
 
-export function FinancialTrackerDashboard({ transactions, categories, settings }: FinancialTrackerDashboardProps) {
-    const [cycleStartDay, setCycleStartDay] = useState(settings.cycle_start_day)
-    const [tempStartDay, setTempStartDay] = useState(settings.cycle_start_day)
-    const [currency, setCurrency] = useState(settings.currency || 'USD')
-    const [tempCurrency, setTempCurrency] = useState(settings.currency || 'USD')
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+export function FinancialTrackerDashboard({ transactions, categories, settings, accounts }: FinancialTrackerDashboardProps) {
+    const cycleStartDay = settings.cycle_start_day
+    const currency = settings.currency || 'USD'
+
+    // Account Selection: Default to first account or "all"
+    const [selectedAccountId, setSelectedAccountId] = useState<string>(accounts[0]?.id || "all")
 
     // Helper to get the cycle for a given date based on start day
     const getCycleStartDate = (dateStr: string) => {
@@ -82,21 +75,17 @@ export function FinancialTrackerDashboard({ transactions, categories, settings }
         return getCycleStartDate(new Date().toISOString().split("T")[0])
     })
 
-    const handleSaveSettings = async () => {
-        try {
-            await updateSettings(tempStartDay, tempCurrency)
-            setCycleStartDay(tempStartDay)
-            setCurrency(tempCurrency)
-            setIsSettingsOpen(false)
-            toast.success("Settings updated")
-        } catch (error) {
-            toast.error("Failed to update settings")
-        }
-    }
-
+    // Filter Transactions by Cycle AND Account
     const filteredTransactions = transactions.filter((t) => {
         const txCycleStart = getCycleStartDate(t.date)
-        return txCycleStart === selectedCycleStart
+        const inCycle = txCycleStart === selectedCycleStart
+
+        let inAccount = true
+        if (selectedAccountId !== "all") {
+            inAccount = t.account_id === selectedAccountId
+        }
+
+        return inCycle && inAccount
     })
 
     // Generate month options dynamically based on available data + some buffer
@@ -180,70 +169,31 @@ export function FinancialTrackerDashboard({ transactions, categories, settings }
                 <header className="flex flex-col gap-4 mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-primary">
+                            {/* <div className="p-2 rounded-lg bg-primary"> 
                                 <Wallet className="h-6 w-6 text-primary-foreground" />
-                            </div>
+                            </div> */}
+                            {/* Removed Title/Logo since it's in Sidebar now, or we can keep it as page title */}
                             <div>
-                                <h1 className="text-2xl font-bold tracking-tight">FinTrack</h1>
-                                <p className="text-sm text-muted-foreground">
+                                <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+                                {/* <p className="text-sm text-muted-foreground">
                                     Personal Finance Tracker
-                                </p>
+                                </p> */}
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2 flex-wrap">
-                            <Popover open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" size="icon">
-                                        <Settings className="h-4 w-4" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80">
-                                    <div className="grid gap-4">
-                                        <div className="space-y-2">
-                                            <h4 className="font-medium leading-none">Settings</h4>
-                                            <p className="text-sm text-muted-foreground">
-                                                Configure your financial preferences.
-                                            </p>
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <div className="grid grid-cols-3 items-center gap-4">
-                                                <Label htmlFor="startDay">Start Day</Label>
-                                                <Input
-                                                    id="startDay"
-                                                    type="number"
-                                                    min={1}
-                                                    max={31}
-                                                    value={tempStartDay}
-                                                    onChange={(e) => {
-                                                        const val = parseInt(e.target.value)
-                                                        if (val >= 1 && val <= 31) {
-                                                            setTempStartDay(val)
-                                                        }
-                                                    }}
-                                                    className="col-span-2 h-8"
-                                                />
-                                            </div>
-                                            <div className="grid grid-cols-3 items-center gap-4">
-                                                <Label htmlFor="currency">Currency</Label>
-                                                <Select value={tempCurrency} onValueChange={setTempCurrency}>
-                                                    <SelectTrigger id="currency" className="col-span-2 h-8">
-                                                        <SelectValue placeholder="Select currency" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {CURRENCIES.map((c) => (
-                                                            <SelectItem key={c.value} value={c.value}>
-                                                                {c.label}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <Button size="sm" onClick={handleSaveSettings}>Save Changes</Button>
-                                        </div>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
+                            {/* Account Selector */}
+                            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Select Account" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Accounts</SelectItem>
+                                    {accounts.map(acc => (
+                                        <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
 
                             <Select value={selectedCycleStart} onValueChange={setSelectedCycleStart}>
                                 <SelectTrigger className="w-[180px] sm:w-[240px]">
@@ -257,7 +207,15 @@ export function FinancialTrackerDashboard({ transactions, categories, settings }
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <TransactionForm categories={categories} currency={currency} />
+
+                            <TransferForm accounts={accounts} />
+
+                            <TransactionForm
+                                categories={categories}
+                                currency={currency}
+                                accounts={accounts}
+                                defaultAccountId={selectedAccountId !== "all" ? selectedAccountId : undefined}
+                            />
                         </div>
                     </div>
                 </header>

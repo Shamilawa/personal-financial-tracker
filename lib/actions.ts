@@ -2,7 +2,7 @@
 
 import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
-import { Transaction, Category, Settings } from './definitions';
+import { Transaction, Category, Settings, Account } from './definitions';
 
 
 export async function getSettings(): Promise<Settings> {
@@ -74,24 +74,41 @@ export async function addCategory(name: string, type: 'income' | 'expense') {
 }
 
 
-export async function getTransactions(): Promise<Transaction[]> {
+export async function getTransactions(accountId?: string): Promise<Transaction[]> {
     try {
-        const data = await sql<Transaction>`
-      SELECT 
-        id, 
-        type, 
-        category, 
-        description, 
-        amount, 
-        TO_CHAR(date, 'YYYY-MM-DD') as date 
-      FROM transactions
-      ORDER BY date DESC, created_at DESC
-    `;
-        // CAST amount to number because node-postgres returns numeric as string
+        let data;
+        if (accountId) {
+            data = await sql<Transaction>`
+                SELECT 
+                    id, 
+                    account_id,
+                    type, 
+                    category, 
+                    description, 
+                    amount, 
+                    TO_CHAR(date, 'YYYY-MM-DD') as date 
+                FROM transactions
+                WHERE account_id = ${accountId}
+                ORDER BY date DESC, created_at DESC
+            `;
+        } else {
+            data = await sql<Transaction>`
+                SELECT 
+                    id, 
+                    account_id,
+                    type, 
+                    category, 
+                    description, 
+                    amount, 
+                    TO_CHAR(date, 'YYYY-MM-DD') as date 
+                FROM transactions
+                ORDER BY date DESC, created_at DESC
+            `;
+        }
+
         return data.rows.map(row => ({
             ...row,
             amount: Number(row.amount),
-            // date is already string YYYY-MM-DD from TO_CHAR
         }));
     } catch (error) {
         console.error('Database Error:', error);
@@ -101,12 +118,20 @@ export async function getTransactions(): Promise<Transaction[]> {
 
 export async function addTransaction(transaction: Omit<Transaction, 'id'>) {
     try {
-        const { type, category, description, amount, date } = transaction;
+        const { account_id, type, category, description, amount, date } = transaction;
 
+        // 1. Insert Transaction
         await sql`
-      INSERT INTO transactions (type, category, description, amount, date)
-      VALUES (${type}, ${category}, ${description}, ${amount}, ${date})
-    `;
+            INSERT INTO transactions (account_id, type, category, description, amount, date)
+            VALUES (${account_id}, ${type}, ${category}, ${description}, ${amount}, ${date})
+        `;
+
+        // 2. Update Account Balance
+        if (type === 'income') {
+            await sql`UPDATE accounts SET balance = balance + ${amount} WHERE id = ${account_id}`;
+        } else {
+            await sql`UPDATE accounts SET balance = balance - ${amount} WHERE id = ${account_id}`;
+        }
 
         revalidatePath('/');
         return { message: 'Transaction added successfully' };
@@ -118,11 +143,116 @@ export async function addTransaction(transaction: Omit<Transaction, 'id'>) {
 
 export async function deleteTransaction(id: string) {
     try {
+        // 1. Get transaction details to revert balance
+        const txResult = await sql`SELECT account_id, type, amount FROM transactions WHERE id = ${id}`;
+        if (txResult.rowCount === 0) return { message: 'Transaction not found' };
+
+        const { account_id, type, amount } = txResult.rows[0];
+
+        // 2. Delete Transaction
         await sql`DELETE FROM transactions WHERE id = ${id}`;
+
+        // 3. Revert Account Balance
+        if (type === 'income') {
+            await sql`UPDATE accounts SET balance = balance - ${amount} WHERE id = ${account_id}`;
+        } else {
+            await sql`UPDATE accounts SET balance = balance + ${amount} WHERE id = ${account_id}`;
+        }
+
         revalidatePath('/');
         return { message: 'Transaction deleted successfully' };
     } catch (error) {
         console.error('Database Error:', error);
         throw new Error('Failed to delete transaction');
+    }
+}
+
+// --- Account Actions ---
+
+export async function getAccounts(): Promise<Account[]> {
+    try {
+        const data = await sql<Account>`
+            SELECT * FROM accounts ORDER BY created_at ASC
+        `;
+        return data.rows.map(row => ({
+            ...row,
+            balance: Number(row.balance)
+        }));
+    } catch (error) {
+        console.error('Database Error:', error);
+        return [];
+    }
+}
+
+export async function createAccount(name: string, type: 'main' | 'saving' | 'custom', initialBalance: number) {
+    try {
+        await sql`
+            INSERT INTO accounts (name, type, balance)
+            VALUES (${name}, ${type}, ${initialBalance})
+        `;
+        revalidatePath('/');
+        return { message: 'Account created successfully' };
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to create account');
+    }
+}
+
+export async function updateAccount(id: string, name: string, type: 'main' | 'saving' | 'custom') {
+    try {
+        await sql`
+            UPDATE accounts SET name = ${name}, type = ${type} WHERE id = ${id}
+        `;
+        revalidatePath('/');
+        return { message: 'Account updated successfully' };
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to update account');
+    }
+}
+
+export async function deleteAccount(id: string) {
+    try {
+        // Optionally delete transactions associated? Or prevent delete?
+        // For now, let's CASCADE delete via logic or let DB handling filtering.
+        // Better to delete transactions first.
+        await sql`DELETE FROM transactions WHERE account_id = ${id}`;
+        await sql`DELETE FROM accounts WHERE id = ${id}`;
+
+        revalidatePath('/');
+        return { message: 'Account deleted successfully' };
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to delete account');
+    }
+}
+
+export async function transferFunds(sourceId: string, destId: string, amount: number, date: string) {
+    try {
+        // 1. Deduct from Source (Expense)
+        await addTransaction({
+            account_id: sourceId,
+            type: 'expense',
+            category: 'Transfer',
+            description: 'Transfer to ' + destId, // Could look up name ideally
+            amount: amount,
+            date: date
+        });
+
+        // 2. Add to Destination (Income)
+        await addTransaction({
+            account_id: destId,
+            type: 'income',
+            category: 'Transfer',
+            description: 'Transfer from ' + sourceId,
+            amount: amount,
+            date: date
+        });
+
+        revalidatePath('/');
+        return { message: 'Transfer successful' };
+    } catch (error) {
+        console.error('Transfer Error:', error);
+        throw new Error('Failed to transfer funds');
     }
 }

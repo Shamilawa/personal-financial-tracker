@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,23 +21,35 @@ import {
 import { Plus } from "lucide-react"
 import { addTransaction, addCategory } from "@/lib/actions"
 import { toast } from "sonner"
-import { Category } from "@/lib/definitions"
+import { Category, Account } from "@/lib/definitions"
 
 type TransactionFormProps = {
   categories: Category[]
+  accounts: Account[]
   currency: string
+  defaultAccountId?: string
 }
 
-export function TransactionForm({ categories, currency }: TransactionFormProps) {
+export function TransactionForm({ categories, accounts, currency, defaultAccountId }: TransactionFormProps) {
   const [open, setOpen] = useState(false)
   const [type, setType] = useState<"income" | "expense">("expense")
   const [category, setCategory] = useState("")
+  const [accountId, setAccountId] = useState(defaultAccountId || (accounts[0]?.id || ""))
   const [description, setDescription] = useState("")
   const [amount, setAmount] = useState("")
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
   const [loading, setLoading] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
   const [isCreatingCategory, setIsCreatingCategory] = useState(false)
+
+  // Update accountId if default changes
+  useEffect(() => {
+    if (defaultAccountId) {
+      setAccountId(defaultAccountId)
+    } else if (!accountId && accounts.length > 0) {
+      setAccountId(accounts[0].id)
+    }
+  }, [defaultAccountId, accounts])
 
   const filteredCategories = categories.filter((c) => c.type === type)
 
@@ -87,11 +99,15 @@ export function TransactionForm({ categories, currency }: TransactionFormProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!category || !amount || !date) return
+    if (!category || !amount || !date || !accountId) {
+      toast.error("Please fill in all required fields")
+      return
+    }
 
     setLoading(true)
     try {
       await addTransaction({
+        account_id: accountId,
         type,
         category,
         description,
@@ -100,6 +116,7 @@ export function TransactionForm({ categories, currency }: TransactionFormProps) 
       })
       toast.success("Transaction added successfully")
       setOpen(false)
+      // Reset some fields
       setCategory("")
       setDescription("")
       setAmount("")
@@ -135,6 +152,24 @@ export function TransactionForm({ categories, currency }: TransactionFormProps) 
           <DialogTitle>Add Transaction</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 pt-4">
+
+          {/* Account Selection */}
+          <div className="grid gap-2">
+            <Label htmlFor="account">Account</Label>
+            <Select value={accountId} onValueChange={setAccountId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select account" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((acc) => (
+                  <SelectItem key={acc.id} value={acc.id}>
+                    {acc.name} ({getCurrencySymbol(currency)}{acc.balance})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="grid gap-2">
             <Label>Type</Label>
             <div className="flex gap-2">

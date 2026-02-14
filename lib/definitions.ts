@@ -1,5 +1,6 @@
 export type Transaction = {
     id: string; // UUID
+    account_id: string; // UUID
     type: "income" | "expense";
     category: string;
     description: string;
@@ -17,4 +18,11 @@ export type Settings = {
     id: string;
     cycle_start_day: number;
     currency: string;
+};
+
+export type Account = {
+    id: string;
+    name: string;
+    type: "main" | "saving" | "custom";
+    balance: number;
 };
