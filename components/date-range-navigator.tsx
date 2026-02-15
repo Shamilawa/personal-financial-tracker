@@ -7,18 +7,15 @@ import { addMonths, format, subMonths } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from "@/components/ui/command"
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Badge } from "@/components/ui/badge"
 import { getCycleStartDate } from "@/lib/date-utils"
 
 interface DateRangeNavigatorProps {
@@ -137,25 +134,23 @@ export function DateRangeNavigator({
     }
 
     return (
-        <div className="flex items-center space-x-2 bg-background p-1 rounded-md border shadow-sm">
+        <div className="flex items-center gap-1">
             <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={handlePrev}
                 disabled={!canGoPrev}
-                className="h-8 w-8"
+                className="h-9 w-9"
             >
                 <ChevronLeft className="h-4 w-4" />
                 <span className="sr-only">Previous period</span>
             </Button>
 
-            <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
                     <Button
                         variant="outline"
-                        role="combobox"
-                        aria-expanded={open}
-                        className="w-[240px] justify-between h-8 text-sm font-normal"
+                        className="w-[240px] justify-between h-9 text-sm font-normal"
                     >
                         {selectedOption ? (
                             <span className="flex items-center gap-2">
@@ -166,53 +161,66 @@ export function DateRangeNavigator({
                             "Select period..."
                         )}
                     </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[240px] p-0">
-                    <Command>
-                        <CommandList>
-                            <CommandEmpty>No period found.</CommandEmpty>
-                            <CommandGroup>
-                                {options.map((option) => (
-                                    <CommandItem
-                                        key={option.value}
-                                        value={option.label} // Command filters by value/label
-                                        onSelect={() => {
-                                            onDateChange(option.value)
-                                            setOpen(false)
-                                        }}
-                                        className="cursor-pointer"
-                                    >
-                                        <Check
-                                            className={cn(
-                                                "mr-2 h-4 w-4",
-                                                option.value === selectedDate ? "opacity-100" : "opacity-0"
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Select Period</DialogTitle>
+                        <DialogDescription>
+                            Choose a budgeting cycle to view.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="bg-muted/50 p-4 rounded-lg text-sm space-y-2 mb-4">
+                        <p className="font-medium text-primary">Budgeting Cycle Configuration</p>
+                        <p className="text-muted-foreground">
+                            Your billing cycle is configured to start on <span className="font-semibold text-foreground">day {cycleStartDay}</span> of each month.
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                            This typically aligns with your salary date or primary income source. You can adjust this in Settings.
+                        </p>
+                    </div>
+
+                    <ScrollArea className="h-[300px] pr-4">
+                        <div className="space-y-1">
+                            {options.map((option) => (
+                                <Button
+                                    key={option.value}
+                                    variant={option.value === selectedDate ? "secondary" : "ghost"}
+                                    className={cn(
+                                        "w-full justify-start font-normal h-auto py-3",
+                                        option.value === selectedDate && "font-medium"
+                                    )}
+                                    onClick={() => {
+                                        onDateChange(option.value)
+                                        setOpen(false)
+                                    }}
+                                >
+                                    <div className="flex flex-col items-start gap-1">
+                                        <div className="flex items-center gap-2">
+                                            {option.value === currentCycleStartDate && (
+                                                <Badge variant="default" className="text-[10px] h-5 px-1.5">
+                                                    Current
+                                                </Badge>
                                             )}
-                                        />
-                                        <span className={cn(
-                                            "flex-1",
-                                            option.value === selectedDate ? "font-bold" : ""
-                                        )}>
-                                            {option.label}
-                                        </span>
-                                        {option.value === currentCycleStartDate && (
-                                            <span className="ml-2 text-xs text-muted-foreground bg-secondary px-1 rounded">
-                                                Current
-                                            </span>
-                                        )}
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
+                                            <span>{option.label}</span>
+                                        </div>
+                                    </div>
+                                    {option.value === selectedDate && (
+                                        <Check className="ml-auto h-4 w-4 opacity-50" />
+                                    )}
+                                </Button>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                </DialogContent>
+            </Dialog>
 
             <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={handleNext}
                 disabled={!canGoNext}
-                className="h-8 w-8"
+                className="h-9 w-9"
             >
                 <ChevronRight className="h-4 w-4" />
                 <span className="sr-only">Next period</span>

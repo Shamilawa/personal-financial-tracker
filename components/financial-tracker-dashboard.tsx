@@ -2,25 +2,15 @@
 
 import { useState } from "react"
 import { Calendar } from "lucide-react"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 import { format } from "date-fns"
 
-import { TransactionForm } from "@/components/transaction-form"
-import { TransferForm } from "@/components/transfer-form"
 import { SummaryCards } from "@/components/summary-cards"
 import { TransactionsList } from "@/components/transactions-list"
 import { ExpenseChart } from "@/components/expense-chart"
 import { CategoryBreakdown } from "@/components/category-breakdown"
-import { DateRangeNavigator } from "@/components/date-range-navigator"
-import { Wallet } from "lucide-react"
 import { Transaction, Category, Account } from "@/lib/definitions"
 import { getCycleStartDate } from "@/lib/date-utils"
+import { DashboardHeader } from "@/components/dashboard-header"
 
 
 type FinancialTrackerDashboardProps = {
@@ -67,55 +57,18 @@ export function FinancialTrackerDashboard({ transactions, categories, settings, 
 
     return (
         <main className="min-h-screen bg-background">
+            <DashboardHeader
+                accounts={accounts}
+                categories={categories}
+                currency={currency}
+                cycleStartDay={cycleStartDay}
+                selectedAccountId={selectedAccountId}
+                onAccountChange={setSelectedAccountId}
+                selectedCycleStart={selectedCycleStart}
+                onDateChange={setSelectedCycleStart}
+            />
+
             <div className="container mx-auto px-4 py-8 max-w-7xl">
-                {/* Header */}
-                <header className="flex flex-col gap-4 mb-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            {/* <div className="p-2 rounded-lg bg-primary"> 
-                                <Wallet className="h-6 w-6 text-primary-foreground" />
-                            </div> */}
-                            {/* Removed Title/Logo since it's in Sidebar now, or we can keep it as page title */}
-                            <div>
-                                <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-                                {/* <p className="text-sm text-muted-foreground">
-                                    Personal Finance Tracker
-                                </p> */}
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 flex-wrap">
-                            {/* Account Selector */}
-                            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Select Account" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Accounts</SelectItem>
-                                    {accounts.map(acc => (
-                                        <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            <DateRangeNavigator
-                                cycleStartDay={cycleStartDay}
-                                selectedDate={selectedCycleStart}
-                                onDateChange={setSelectedCycleStart}
-                            />
-
-                            <TransferForm accounts={accounts} />
-
-                            <TransactionForm
-                                categories={categories}
-                                currency={currency}
-                                accounts={accounts}
-                                defaultAccountId={selectedAccountId !== "all" ? selectedAccountId : undefined}
-                            />
-                        </div>
-                    </div>
-                </header>
-
                 {/* Summary Cards */}
                 <section className="mb-8">
                     <SummaryCards transactions={filteredTransactions} currency={currency} />
