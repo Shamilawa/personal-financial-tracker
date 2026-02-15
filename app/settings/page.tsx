@@ -18,7 +18,7 @@ export default async function SettingsPage() {
             <DashboardShell className="max-w-4xl">
                 <div className="space-y-8">
                     <section>
-                        <AccountManager accounts={accounts} />
+                        <AccountManager accounts={accounts} currency={settings.currency || "USD"} />
                     </section>
 
                     <section>

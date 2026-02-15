@@ -27,9 +27,10 @@ import { DebtForm } from "./debt-form"
 
 type DebtListProps = {
     debts: Debt[]
+    currency: string
 }
 
-export function DebtList({ debts }: DebtListProps) {
+export function DebtList({ debts, currency }: DebtListProps) {
     const [editingDebt, setEditingDebt] = useState<Debt | null>(null)
     const [isEditOpen, setIsEditOpen] = useState(false)
 
@@ -42,6 +43,10 @@ export function DebtList({ debts }: DebtListProps) {
                 toast.error("Failed to delete debt")
             }
         }
+    }
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "USD" }).format(amount)
     }
 
     if (debts.length === 0) {
@@ -92,8 +97,8 @@ export function DebtList({ debts }: DebtListProps) {
                                     <TableCell className="text-muted-foreground">{debt.start_date}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-bold">${debt.current_balance.toLocaleString()}</span>
-                                            <span className="text-xs text-muted-foreground">of ${debt.total_amount.toLocaleString()}</span>
+                                            <span className="font-bold">{formatCurrency(debt.current_balance)}</span>
+                                            <span className="text-xs text-muted-foreground">of {formatCurrency(debt.total_amount)}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -103,7 +108,7 @@ export function DebtList({ debts }: DebtListProps) {
                                         </div>
                                     </TableCell>
                                     <TableCell>{debt.interest_rate}%</TableCell>
-                                    <TableCell>${debt.minimum_payment.toLocaleString()}</TableCell>
+                                    <TableCell>{formatCurrency(debt.minimum_payment)}</TableCell>
                                     <TableCell>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>

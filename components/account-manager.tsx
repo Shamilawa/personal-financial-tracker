@@ -35,9 +35,10 @@ import { Loader2, Plus, Pencil, Trash2 } from "lucide-react"
 
 type AccountManagerProps = {
     accounts: Account[]
+    currency: string
 }
 
-export function AccountManager({ accounts }: AccountManagerProps) {
+export function AccountManager({ accounts, currency }: AccountManagerProps) {
     const [isAddOpen, setIsAddOpen] = useState(false)
     const [isEditOpen, setIsEditOpen] = useState(false)
     const [editingAccount, setEditingAccount] = useState<Account | null>(null)
@@ -107,6 +108,7 @@ export function AccountManager({ accounts }: AccountManagerProps) {
 
     return (
         <div className="space-y-4">
+            {/* ... (existing header and add button) */}
             <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Accounts</h2>
                 <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -140,7 +142,7 @@ export function AccountManager({ accounts }: AccountManagerProps) {
                                     </Select>
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="balance">Initial Balance</Label>
+                                    <Label htmlFor="balance">Initial Balance ({currency})</Label>
                                     <Input
                                         id="balance"
                                         type="number"
@@ -183,7 +185,7 @@ export function AccountManager({ accounts }: AccountManagerProps) {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(account.balance)}
+                                {new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "USD" }).format(account.balance)}
                             </div>
                         </CardContent>
                     </Card>

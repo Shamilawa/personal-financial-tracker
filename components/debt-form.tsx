@@ -29,7 +29,13 @@ export function DebtForm({ debtToEdit, open: controlledOpen, onOpenChange: setCo
     const [internalOpen, setInternalOpen] = useState(false)
     const isControlled = controlledOpen !== undefined
     const open = isControlled ? controlledOpen : internalOpen
-    const setOpen = isControlled ? setControlledOpen : setInternalOpen
+    const setOpen = (value: boolean) => {
+        if (isControlled) {
+            setControlledOpen?.(value)
+        } else {
+            setInternalOpen(value)
+        }
+    }
 
     const [name, setName] = useState("")
     const [totalAmount, setTotalAmount] = useState("")

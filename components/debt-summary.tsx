@@ -6,9 +6,10 @@ import { DollarSign, Percent, CalendarClock } from "lucide-react"
 
 type DebtSummaryProps = {
     debts: Debt[]
+    currency: string
 }
 
-export function DebtSummary({ debts }: DebtSummaryProps) {
+export function DebtSummary({ debts, currency }: DebtSummaryProps) {
     const totalDebt = debts.reduce((sum, debt) => sum + debt.current_balance, 0)
     const totalMonthlyPayment = debts.reduce((sum, debt) => sum + debt.minimum_payment, 0)
 
@@ -18,6 +19,10 @@ export function DebtSummary({ debts }: DebtSummaryProps) {
         ? debts.reduce((sum, debt) => sum + (debt.current_balance * debt.interest_rate), 0) / totalDebt
         : 0
 
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "USD" }).format(amount)
+    }
+
     return (
         <div className="grid gap-4 md:grid-cols-3">
             <Card>
@@ -26,7 +31,7 @@ export function DebtSummary({ debts }: DebtSummaryProps) {
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">${totalDebt.toLocaleString()}</div>
+                    <div className="text-2xl font-bold">{formatCurrency(totalDebt)}</div>
                     <p className="text-xs text-muted-foreground">
                         across {debts.length} active debts
                     </p>
@@ -39,7 +44,7 @@ export function DebtSummary({ debts }: DebtSummaryProps) {
                     <CalendarClock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">${totalMonthlyPayment.toLocaleString()}</div>
+                    <div className="text-2xl font-bold">{formatCurrency(totalMonthlyPayment)}</div>
                     <p className="text-xs text-muted-foreground">
                         total minimum payments
                     </p>
