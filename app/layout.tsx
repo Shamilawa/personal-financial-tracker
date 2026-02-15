@@ -35,6 +35,8 @@ import { AppSidebar } from "@/components/app-sidebar"
 
 import { getAccounts, getSettings } from "@/lib/actions"
 
+import { Suspense } from "react"
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -49,7 +51,9 @@ export default async function RootLayout({
     <html lang="en">
       <body className={`font-sans antialiased`}>
         <SidebarProvider>
-          <AppSidebar accounts={accounts} currency={settings.currency} />
+          <Suspense fallback={<div className="w-[240px] border-r bg-sidebar" />}>
+            <AppSidebar accounts={accounts} currency={settings.currency} />
+          </Suspense>
           <SidebarInset>
             {children}
           </SidebarInset>
