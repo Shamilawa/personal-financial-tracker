@@ -3,6 +3,7 @@
 import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 import { Debt } from './definitions';
+import { addTransaction } from './actions';
 
 export async function getDebts(): Promise<Debt[]> {
     try {
@@ -130,5 +131,48 @@ export async function deleteDebt(id: string) {
     } catch (error) {
         console.error('Database Error:', error);
         throw new Error('Failed to delete debt');
+    }
+}
+
+export async function payDebt(
+    debtId: string,
+    accountId: string,
+    amount: number,
+    date: string,
+    description?: string
+) {
+    try {
+        // 1. Get Debt Details for naming/verification (optional but good)
+        const debtResult = await sql`SELECT name, current_balance FROM debts WHERE id = ${debtId}`;
+        if (debtResult.rowCount === 0) {
+            return { error: 'Debt not found' };
+        }
+        const debt = debtResult.rows[0];
+
+        // 2. Create Expense Transaction
+        // We use the addTransaction action to ensure consistent logic (updating account balance, etc.)
+        await addTransaction({
+            account_id: accountId,
+            type: 'expense',
+            category: 'Debt Payment', // Or specific category?
+            description: description || `Payment for ${debt.name}`,
+            amount: amount,
+            date: date
+        });
+
+        // 3. Update Debt Balance
+        // Reduce the current balance by the payment amount
+        await sql`
+            UPDATE debts 
+            SET current_balance = current_balance - ${amount}
+            WHERE id = ${debtId}
+        `;
+
+        revalidatePath('/debt');
+        revalidatePath('/'); // Dashboard might show net worth etc.
+        return { message: 'Payment recorded successfully' };
+    } catch (error) {
+        console.error('Payment Error:', error);
+        throw new Error('Failed to record payment');
     }
 }

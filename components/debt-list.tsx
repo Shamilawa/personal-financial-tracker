@@ -11,21 +11,25 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { MoreHorizontal, Pencil, Trash2, CalendarIcon } from "lucide-react"
-import { Debt } from "@/lib/definitions"
+import { MoreHorizontal, Pencil, Trash2, CalendarIcon, DollarSign } from "lucide-react"
+import { Debt, Account } from "@/lib/definitions"
 import { deleteDebt } from "@/lib/debt-actions"
 import { toast } from "sonner"
 import { DebtForm } from "./debt-form"
+import { DebtPaymentDialog } from "./debt-payment-dialog"
 import { DataTable, Column } from "@/components/ui/data-table"
 
 type DebtListProps = {
     debts: Debt[]
     currency: string
+    accounts: any[] // TODO: Import Account type
 }
 
-export function DebtList({ debts, currency }: DebtListProps) {
+export function DebtList({ debts, currency, accounts }: DebtListProps) {
     const [editingDebt, setEditingDebt] = useState<Debt | null>(null)
     const [isEditOpen, setIsEditOpen] = useState(false)
+    const [paymentDebt, setPaymentDebt] = useState<Debt | null>(null)
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false)
 
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this debt?")) {
@@ -108,6 +112,14 @@ export function DebtList({ debts, currency }: DebtListProps) {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem
                             onClick={() => {
+                                setPaymentDebt(debt)
+                                setIsPaymentOpen(true)
+                            }}
+                        >
+                            <DollarSign className="mr-2 h-4 w-4" /> Pay
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() => {
                                 setEditingDebt(debt)
                                 setIsEditOpen(true)
                             }}
@@ -147,6 +159,17 @@ export function DebtList({ debts, currency }: DebtListProps) {
                     if (!open) setEditingDebt(null)
                 }}
                 debtToEdit={editingDebt || undefined}
+            />
+
+            <DebtPaymentDialog
+                open={isPaymentOpen}
+                onOpenChange={(open) => {
+                    setIsPaymentOpen(open)
+                    if (!open) setPaymentDebt(null)
+                }}
+                debt={paymentDebt}
+                accounts={accounts}
+                currency={currency}
             />
         </>
     )
