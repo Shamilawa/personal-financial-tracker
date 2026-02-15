@@ -33,16 +33,23 @@ export const metadata: Metadata = {
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 
-export default function RootLayout({
+import { getAccounts, getSettings } from "@/lib/actions"
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const [accounts, settings] = await Promise.all([
+    getAccounts(),
+    getSettings()
+  ])
+
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
         <SidebarProvider>
-          <AppSidebar />
+          <AppSidebar accounts={accounts} currency={settings.currency} />
           <SidebarInset>
             {children}
           </SidebarInset>

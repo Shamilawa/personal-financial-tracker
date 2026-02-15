@@ -1,14 +1,3 @@
-"use client"
-
-import { Wallet } from "lucide-react"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-
 import { TransactionForm } from "@/components/transaction-form"
 import { TransferForm } from "@/components/transfer-form"
 import { DateRangeNavigator } from "@/components/date-range-navigator"
@@ -20,8 +9,6 @@ interface DashboardHeaderProps {
     categories: Category[]
     currency: string
     cycleStartDay: number
-    selectedAccountId: string
-    onAccountChange: (value: string) => void
     selectedCycleStart: string
     onDateChange: (date: string) => void
 }
@@ -31,8 +18,6 @@ export function DashboardHeader({
     categories,
     currency,
     cycleStartDay,
-    selectedAccountId,
-    onAccountChange,
     selectedCycleStart,
     onDateChange,
 }: DashboardHeaderProps) {
@@ -41,21 +26,6 @@ export function DashboardHeader({
             <div className="flex items-center gap-2 max-w-[calc(100vw-150px)] overflow-x-auto no-scrollbar">
                 {/* Context / Filters Group */}
                 <div className="flex items-center gap-2">
-                    <Select value={selectedAccountId} onValueChange={onAccountChange}>
-                        <SelectTrigger className="w-[140px] sm:w-[200px] h-9 font-bold">
-                            <div className="flex items-center gap-2 truncate">
-                                <Wallet className="h-4 w-4 shrink-0 text-primary" />
-                                <SelectValue placeholder="Select Account" />
-                            </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Accounts</SelectItem>
-                            {accounts.map(acc => (
-                                <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
                     <DateRangeNavigator
                         cycleStartDay={cycleStartDay}
                         selectedDate={selectedCycleStart}
@@ -74,7 +44,6 @@ export function DashboardHeader({
                         categories={categories}
                         currency={currency}
                         accounts={accounts}
-                        defaultAccountId={selectedAccountId !== "all" ? selectedAccountId : undefined}
                     />
                 </div>
             </div>

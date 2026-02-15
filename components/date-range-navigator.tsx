@@ -38,14 +38,6 @@ export function DateRangeNavigator({
         const currentCycleStart = new Date(currentCycleStartStr)
 
         // Range configuration
-        // User wants "Next button disabled when we are in the current budgeting period"
-        // So we shouldn't allow going to FUTURE cycles if the requirement is strict.
-        // However, usually seeing 1 future cycle is good for planning. 
-        // BUT the user specifically said "Next button should be disabled when we are in the current budgeting period".
-        // This implies we cannot go past "Current".
-        // I will generate 1 future cycle just in case they want to see it in the dropdown, 
-        // but I'll implement the disabled logic based on "Current".
-
         const cyclesToShow = 13 // 1 future + current + 11 past
         const futureCycles = 1
 
@@ -75,7 +67,7 @@ export function DateRangeNavigator({
             }
         }
 
-        const opts: { value: string; label: string; start: Date }[] = []
+        const opts: { value: string; label: string; start: Date | null }[] = []
 
         let nextCycleStart = addMonths(cycleStarts[0], 1)
         const daysInNextMonth = new Date(nextCycleStart.getFullYear(), nextCycleStart.getMonth() + 1, 0).getDate()
@@ -98,28 +90,26 @@ export function DateRangeNavigator({
             nextCycleStart = start
         }
 
+        // Add "Overall" option at the end
+        opts.push({
+            value: "overall",
+            label: "Overall (All Time)",
+            start: null
+        })
+
         return opts
     }, [cycleStartDay])
 
     const selectedOption = options.find(o => o.value === selectedDate)
     const selectedIndex = options.findIndex(o => o.value === selectedDate)
 
+    const isOverall = selectedDate === "overall"
+
     // Current Cycle Logic
     const currentCycleStartDate = getCycleStartDate(format(new Date(), "yyyy-MM-dd"), cycleStartDay)
 
-    // Disable logic
-    // "Next button should be disabled when we are in the current budgeting period"
-    // This meant if selectedDate === currentCycleStartDate, Next is disabled.
-    // Note: options are sorted Future -> Past. So index 0 is Future, index 1 is Current (usually).
-    // Next button (going forward in time) means moving to a LOWER index in `options`.
-
-    const canGoNext = selectedDate !== currentCycleStartDate && selectedIndex > 0
-    // Wait, if selectedDate is "Future" (index 0), then we definitely can't go next (index -1 doesn't exist).
-    // User said "Next button should be disabled when we are in the CURRENT budgeting period".
-    // This implies if I am at "Current", I cannot go to "Future".
-    // So `canGoNext` should be false if `selectedDate === currentCycleStartDate`.
-
-    const canGoPrev = selectedIndex < options.length - 1
+    const canGoNext = !isOverall && selectedDate !== currentCycleStartDate && selectedIndex > 0
+    const canGoPrev = !isOverall && selectedIndex < options.length - 2 // -2 because last option is "Overall"
 
     const handlePrev = () => {
         if (canGoPrev) {
@@ -197,7 +187,7 @@ export function DateRangeNavigator({
                                 >
                                     <div className="flex flex-col items-start gap-1">
                                         <div className="flex items-center gap-2">
-                                            {option.value === currentCycleStartDate && (
+                                            {option.value === currentCycleStartDate && option.value !== "overall" && (
                                                 <Badge variant="default" className="text-[10px] h-5 px-1.5">
                                                     Current
                                                 </Badge>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Calendar } from "lucide-react"
 import { format } from "date-fns"
 
@@ -19,6 +19,7 @@ type FinancialTrackerDashboardProps = {
     categories: Category[];
     settings: { cycle_start_day: number; currency: string };
     accounts: Account[];
+    initialAccountId?: string;
 }
 
 const CURRENCIES = [
@@ -31,22 +32,39 @@ const CURRENCIES = [
     { value: "CAD", label: "CAD ($)" },
 ];
 
-export function FinancialTrackerDashboard({ transactions, categories, settings, accounts }: FinancialTrackerDashboardProps) {
+export function FinancialTrackerDashboard({ transactions, categories, settings, accounts, initialAccountId }: FinancialTrackerDashboardProps) {
     const cycleStartDay = settings.cycle_start_day
     const currency = settings.currency || 'USD'
 
-    // Account Selection: Default to first account or "all"
-    const [selectedAccountId, setSelectedAccountId] = useState<string>(accounts[0]?.id || "all")
+    // Account Selection: Default to passed prop, or First "main" account, or first account, or "all"
+    const [selectedAccountId, setSelectedAccountId] = useState<string>(() => {
+        if (initialAccountId) return initialAccountId;
 
-    // Default to current cycle
-    const [selectedCycleStart, setSelectedCycleStart] = useState(() => {
-        return getCycleStartDate(new Date().toISOString().split("T")[0], cycleStartDay)
+        // Find first primary account
+        const primaryAccount = accounts.find(acc => acc.type === 'main');
+        if (primaryAccount) return primaryAccount.id;
+
+        // Fallback to first available account
+        if (accounts.length > 0) return accounts[0].id;
+
+        return "all";
     })
+
+    // Sync with prop if it changes (e.g. navigation)
+    useEffect(() => {
+        if (initialAccountId) {
+            setSelectedAccountId(initialAccountId)
+        }
+    }, [initialAccountId])
+
+    // Default to "overall" (All Time)
+    const [selectedCycleStart, setSelectedCycleStart] = useState("overall")
 
     // Filter Transactions by Cycle AND Account
     const filteredTransactions = transactions.filter((t) => {
+        const isOverall = selectedCycleStart === "overall"
         const txCycleStart = getCycleStartDate(t.date, cycleStartDay)
-        const inCycle = txCycleStart === selectedCycleStart
+        const inCycle = isOverall ? true : txCycleStart === selectedCycleStart
 
         let inAccount = true
         if (selectedAccountId !== "all") {
@@ -63,15 +81,18 @@ export function FinancialTrackerDashboard({ transactions, categories, settings, 
                 categories={categories}
                 currency={currency}
                 cycleStartDay={cycleStartDay}
-                selectedAccountId={selectedAccountId}
-                onAccountChange={setSelectedAccountId}
                 selectedCycleStart={selectedCycleStart}
                 onDateChange={setSelectedCycleStart}
             />
             <DashboardShell>
                 {/* Summary Cards */}
                 <section className="mb-8">
-                    <SummaryCards transactions={filteredTransactions} currency={currency} />
+                    <SummaryCards
+                        transactions={filteredTransactions}
+                        currency={currency}
+                        accounts={accounts}
+                        selectedAccountId={selectedAccountId}
+                    />
                 </section>
 
                 {/* Charts and Breakdown */}
