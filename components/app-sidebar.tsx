@@ -25,10 +25,7 @@ const items = [
         url: "/",
         icon: LayoutDashboard,
     },
-    {
-        url: "/settings",
-        icon: Settings,
-    },
+
     {
         title: "Debts",
         url: "/debt",
@@ -97,9 +94,28 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <div className="p-2">
-                    {/* Placeholder for footer content if needed */}
-                </div>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={pathname === "/settings"}
+                            tooltip="Settings"
+                            onClick={() => {
+                                if (pathname !== "/settings") {
+                                    setIsLoading("/settings")
+                                }
+                            }}
+                        >
+                            <Link href="/settings">
+                                <Settings />
+                                <span>Settings</span>
+                                {isLoading === "/settings" && (
+                                    <Loader2 className="ml-auto size-4 animate-spin" />
+                                )}
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
             </SidebarFooter>
         </Sidebar>
     )
