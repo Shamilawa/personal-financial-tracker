@@ -30,6 +30,7 @@ export const metadata: Metadata = {
   },
 }
 
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 
 export default function RootLayout({
@@ -40,12 +41,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        <div className="flex h-screen overflow-hidden">
+        <SidebarProvider>
           <AppSidebar />
-          <main className="flex-1 overflow-auto md:ml-[250px] bg-background w-full">
+          <SidebarInset>
             {children}
-          </main>
-        </div>
+          </SidebarInset>
+        </SidebarProvider>
         <Analytics />
       </body>
     </html>

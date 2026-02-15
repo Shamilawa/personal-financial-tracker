@@ -12,6 +12,7 @@ import {
 import { TransactionForm } from "@/components/transaction-form"
 import { TransferForm } from "@/components/transfer-form"
 import { DateRangeNavigator } from "@/components/date-range-navigator"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Transaction, Category, Account } from "@/lib/definitions"
 
 interface DashboardHeaderProps {
@@ -39,11 +40,7 @@ export function DashboardHeader({
         <header className="sticky top-0 z-10 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 py-3 w-full">
                 <div className="flex items-center gap-3">
-                    {/* Optional Logo/Icon if desired
-                    <div className="p-2 rounded-lg bg-primary"> 
-                        <Wallet className="h-5 w-5 text-primary-foreground" />
-                    </div> 
-                    */}
+                    <SidebarTrigger className="-ml-1" />
                     <div>
                         <h1 className="text-xl font-bold tracking-tight">Dashboard</h1>
                     </div>
