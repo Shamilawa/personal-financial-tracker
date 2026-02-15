@@ -26,3 +26,15 @@ export type Account = {
     type: "main" | "saving" | "custom";
     balance: number;
 };
+
+export type Debt = {
+    id: string; // UUID
+    name: string;
+    total_amount: number;
+    current_balance: number;
+    interest_rate: number;
+    minimum_payment: number;
+    due_date?: string; // ISO Date string YYYY-MM-DD
+    start_date?: string; // ISO Date string YYYY-MM-DD
+    notes?: string;
+};

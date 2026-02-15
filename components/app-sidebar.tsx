@@ -26,9 +26,13 @@ const items = [
         icon: LayoutDashboard,
     },
     {
-        title: "Settings",
         url: "/settings",
         icon: Settings,
+    },
+    {
+        title: "Debts",
+        url: "/debt",
+        icon: Wallet,
     },
 ]
 
