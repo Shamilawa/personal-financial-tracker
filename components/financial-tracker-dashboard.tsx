@@ -11,6 +11,7 @@ import { CategoryBreakdown } from "@/components/category-breakdown"
 import { Transaction, Category, Account } from "@/lib/definitions"
 import { getCycleStartDate } from "@/lib/date-utils"
 import { DashboardHeader } from "@/components/dashboard-header"
+import { DashboardShell } from "@/components/layout/shell"
 
 
 type FinancialTrackerDashboardProps = {
@@ -56,7 +57,7 @@ export function FinancialTrackerDashboard({ transactions, categories, settings, 
     })
 
     return (
-        <main className="min-h-screen bg-background">
+        <>
             <DashboardHeader
                 accounts={accounts}
                 categories={categories}
@@ -67,8 +68,7 @@ export function FinancialTrackerDashboard({ transactions, categories, settings, 
                 selectedCycleStart={selectedCycleStart}
                 onDateChange={setSelectedCycleStart}
             />
-
-            <div className="container mx-auto px-4 py-8 max-w-7xl">
+            <DashboardShell>
                 {/* Summary Cards */}
                 <section className="mb-8">
                     <SummaryCards transactions={filteredTransactions} currency={currency} />
@@ -87,7 +87,7 @@ export function FinancialTrackerDashboard({ transactions, categories, settings, 
                         currency={currency}
                     />
                 </section>
-            </div>
-        </main>
+            </DashboardShell>
+        </>
     )
 }

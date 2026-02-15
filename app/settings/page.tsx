@@ -1,6 +1,8 @@
 import { getAccounts, getSettings } from "@/lib/actions"
 import { AccountManager } from "@/components/account-manager"
 import { SettingsForm } from "@/components/settings-form"
+import { DashboardShell } from "@/components/layout/shell"
+import { PageHeader } from "@/components/layout/header"
 
 export const dynamic = 'force-dynamic';
 
@@ -11,24 +13,22 @@ export default async function SettingsPage() {
     ])
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
-            <header>
-                <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-                <p className="text-sm text-muted-foreground">
-                    Manage your accounts and preferences.
-                </p>
-            </header>
+        <>
+            <PageHeader heading="Settings" text="Manage your accounts and preferences." />
+            <DashboardShell className="max-w-4xl">
+                <div className="space-y-8">
+                    <section>
+                        <AccountManager accounts={accounts} />
+                    </section>
 
-            <section>
-                <AccountManager accounts={accounts} />
-            </section>
-
-            <section>
-                <SettingsForm
-                    initialCycleStartDay={settings.cycle_start_day}
-                    initialCurrency={settings.currency}
-                />
-            </section>
-        </div>
+                    <section>
+                        <SettingsForm
+                            initialCycleStartDay={settings.cycle_start_day}
+                            initialCurrency={settings.currency}
+                        />
+                    </section>
+                </div>
+            </DashboardShell>
+        </>
     )
 }
