@@ -4,6 +4,7 @@ import * as React from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { LayoutDashboard, Settings, Wallet, Loader2 } from "lucide-react"
+import { InstallPWAButton } from "@/components/install-pwa-button"
 
 import {
     Sidebar,
@@ -149,6 +150,7 @@ export function AppSidebar({ accounts = [], currency = 'USD', ...props }: AppSid
 
             <SidebarFooter>
                 <SidebarMenu>
+                    <InstallPWAButton />
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             asChild

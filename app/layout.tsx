@@ -7,10 +7,15 @@ import './globals.css'
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
+export const viewport: Metadata = {
+  themeColor: "#000000",
+}
+
 export const metadata: Metadata = {
   title: 'FinTrack - Personal Finance Tracker',
   description: 'Track your monthly income and expenses with ease',
   generator: 'v0.app',
+  manifest: '/manifest.json',
   icons: {
     icon: [
       {
