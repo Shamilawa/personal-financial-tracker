@@ -1,4 +1,5 @@
 import { getTransactions, getCategories, getSettings, getAccounts } from "@/lib/actions"
+import { getRecurringTransactions } from "@/lib/recurring-actions"
 import { FinancialTrackerDashboard } from "@/components/financial-tracker-dashboard"
 
 export const dynamic = 'force-dynamic';
@@ -10,11 +11,12 @@ export default async function Page({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const [transactions, categories, settings, accounts] = await Promise.all([
+  const [transactions, categories, settings, accounts, recurringTransactions] = await Promise.all([
     getTransactions(),
     getCategories(),
     getSettings(),
-    getAccounts()
+    getAccounts(),
+    getRecurringTransactions()
   ])
 
   const resolvedSearchParams = await searchParams
@@ -34,5 +36,6 @@ export default async function Page({
     settings={settings}
     accounts={accounts}
     initialAccountId={initialAccountId}
+    recurringTransactions={recurringTransactions}
   />
 }

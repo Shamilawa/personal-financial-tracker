@@ -34,6 +34,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 
 import { getAccounts, getSettings } from "@/lib/actions"
+import { ensureRecurringTable } from "@/lib/recurring-actions"
 
 import { Suspense } from "react"
 
@@ -44,7 +45,8 @@ export default async function RootLayout({
 }>) {
   const [accounts, settings] = await Promise.all([
     getAccounts(),
-    getSettings()
+    getSettings(),
+    ensureRecurringTable()
   ])
 
   return (

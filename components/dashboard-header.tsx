@@ -1,7 +1,7 @@
 import { TransactionForm } from "@/components/transaction-form"
 import { TransferForm } from "@/components/transfer-form"
 import { DateRangeNavigator } from "@/components/date-range-navigator"
-import { Transaction, Category, Account } from "@/lib/definitions"
+import { Transaction, Category, Account, RecurringTransaction } from "@/lib/definitions"
 import { PageHeader } from "@/components/layout/header"
 
 interface DashboardHeaderProps {
@@ -11,6 +11,7 @@ interface DashboardHeaderProps {
     cycleStartDay: number
     selectedCycleStart: string
     onDateChange: (date: string) => void
+    recurringTransactions: RecurringTransaction[]
 }
 
 export function DashboardHeader({
@@ -20,6 +21,7 @@ export function DashboardHeader({
     cycleStartDay,
     selectedCycleStart,
     onDateChange,
+    recurringTransactions,
 }: DashboardHeaderProps) {
     return (
         <PageHeader heading="Dashboard">
@@ -38,7 +40,7 @@ export function DashboardHeader({
 
                 {/* Actions Group */}
                 <div className="flex items-center gap-2">
-                    <TransferForm accounts={accounts} />
+                    <TransferForm accounts={accounts} recurringTransactions={recurringTransactions} />
 
                     <TransactionForm
                         categories={categories}

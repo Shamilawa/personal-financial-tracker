@@ -8,7 +8,7 @@ import { SummaryCards } from "@/components/summary-cards"
 import { TransactionsList } from "@/components/transactions-list"
 import { ExpenseChart } from "@/components/expense-chart"
 import { CategoryBreakdown } from "@/components/category-breakdown"
-import { Transaction, Category, Account } from "@/lib/definitions"
+import { Transaction, Category, Account, RecurringTransaction } from "@/lib/definitions"
 import { getCycleStartDate } from "@/lib/date-utils"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { DashboardShell } from "@/components/layout/shell"
@@ -20,6 +20,7 @@ type FinancialTrackerDashboardProps = {
     settings: { cycle_start_day: number; currency: string };
     accounts: Account[];
     initialAccountId?: string;
+    recurringTransactions: RecurringTransaction[];
 }
 
 const CURRENCIES = [
@@ -32,7 +33,7 @@ const CURRENCIES = [
     { value: "CAD", label: "CAD ($)" },
 ];
 
-export function FinancialTrackerDashboard({ transactions, categories, settings, accounts, initialAccountId }: FinancialTrackerDashboardProps) {
+export function FinancialTrackerDashboard({ transactions, categories, settings, accounts, initialAccountId, recurringTransactions }: FinancialTrackerDashboardProps) {
     const cycleStartDay = settings.cycle_start_day
     const currency = settings.currency || 'USD'
 
@@ -83,6 +84,7 @@ export function FinancialTrackerDashboard({ transactions, categories, settings, 
                 cycleStartDay={cycleStartDay}
                 selectedCycleStart={selectedCycleStart}
                 onDateChange={setSelectedCycleStart}
+                recurringTransactions={recurringTransactions}
             />
             <DashboardShell>
                 {/* Summary Cards */}
