@@ -18,7 +18,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Plus } from "lucide-react"
+import { CalendarIcon, Plus, Loader2 } from "lucide-react"
+import { AmountInput } from "@/components/amount-input"
 import { addTransaction, addCategory } from "@/lib/actions"
 import { toast } from "sonner"
 import { Category, Account } from "@/lib/definitions"
@@ -74,28 +75,7 @@ export function TransactionForm({ categories, accounts, currency, defaultAccount
     }
   }
 
-  // Helper to format number with commas
-  const formatAmount = (val: string) => {
-    if (!val) return val
-    const number = parseFloat(val.replace(/,/g, ""))
-    if (isNaN(number)) return val
-    return new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(number)
-  }
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    // Allow digits, commas, and one decimal point
-    if (/^[\d,]*\.?[\d]*$/.test(value)) {
-      setAmount(value)
-    }
-  }
-
-  const handleAmountBlur = () => {
-    setAmount(formatAmount(amount))
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -157,7 +137,7 @@ export function TransactionForm({ categories, accounts, currency, defaultAccount
           <div className="grid gap-2">
             <Label htmlFor="account">Account</Label>
             <Select value={accountId} onValueChange={setAccountId}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
               <SelectContent>
@@ -272,19 +252,7 @@ export function TransactionForm({ categories, accounts, currency, defaultAccount
             )}
           </div>
 
-          <div className="flex justify-center py-6">
-            <div className="flex items-baseline gap-2 border-b border-border hover:border-foreground/50 focus-within:border-foreground transition-colors px-8 pb-2">
-              <span className="text-3xl text-muted-foreground font-medium self-center">{currencySymbol}</span>
-              <input
-                type="number"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="font-bold text-6xl border-0 p-0 focus:ring-0 focus:outline-none w-[240px] text-left bg-transparent placeholder:text-muted-foreground/20 caret-primary"
-                placeholder="0"
-              />
-            </div>
-          </div>
+
 
           <div className="grid gap-2">
             <Label htmlFor="description">Description (optional)</Label>
@@ -296,25 +264,7 @@ export function TransactionForm({ categories, accounts, currency, defaultAccount
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="amount">Amount</Label>
-            <div className="flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 py-1 shadow-sm transition-colors focus-within:ring-1 focus-within:ring-ring focus-within:border-ring">
-              <span className="text-sm font-medium text-muted-foreground mr-2 shrink-0">
-                {currencySymbol}
-              </span>
-              <input
-                id="amount"
-                type="text"
-                inputMode="decimal"
-                value={amount}
-                onChange={handleAmountChange}
-                onBlur={handleAmountBlur}
-                placeholder="0.00"
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                required
-              />
-            </div>
-          </div>
+
 
           <div className="grid gap-2">
             <Label htmlFor="date">Date</Label>
@@ -326,6 +276,12 @@ export function TransactionForm({ categories, accounts, currency, defaultAccount
               required
             />
           </div>
+
+          <AmountInput
+            value={amount}
+            onChange={setAmount}
+            currency={currencySymbol}
+          />
 
           <Button type="submit" className="mt-2" disabled={loading}>
             {loading ? "Adding..." : "Add Transaction"}

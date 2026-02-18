@@ -8,6 +8,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { AmountInput } from "@/components/amount-input"
 import { Button } from "@/components/ui/button"
 import { Account } from "@/lib/definitions"
 import { format } from "date-fns"
@@ -98,25 +99,17 @@ export function TransactionConfirmationDialog({
                     <div className="flex justify-between items-center border-b pb-2">
                         <span className="text-muted-foreground">Amount</span>
                         {editableAmount ? (
-                            <div className="w-full flex justify-center py-4">
-                                <div className="flex items-baseline gap-2 border-b border-border hover:border-foreground/50 focus-within:border-foreground transition-colors px-4 pb-1">
-                                    <span className="text-3xl text-muted-foreground font-medium self-center">{currency}</span>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={amountStr}
-                                        onChange={(e) => setAmountStr(e.target.value)}
-                                        className="text-right font-bold text-6xl border-0 p-0 focus:ring-0 focus:outline-none w-[180px] text-left bg-transparent placeholder:text-muted-foreground/20 caret-primary"
-                                        placeholder="0"
-                                        autoFocus
-                                    />
-                                </div>
-                            </div>
+                            <AmountInput
+                                value={amountStr}
+                                onChange={setAmountStr}
+                                currency={currency}
+                                autoFocus
+                                className="py-4"
+                            />
                         ) : (
                             <span className="font-bold text-lg">{displayCurrency(details.amount || 0)}</span>
                         )}
                     </div>
-// ... rest of component
 
                     {details.type === 'transfer' ? (
                         <>

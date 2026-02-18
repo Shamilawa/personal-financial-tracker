@@ -32,6 +32,7 @@ import { Account, RecurringTransaction, Category } from "@/lib/definitions"
 import { RecurringList } from "@/components/recurring-list"
 import { TransactionConfirmationDialog } from "@/components/transaction-confirmation-dialog"
 import { CreateRecurringDialog } from "@/components/create-recurring-dialog"
+import { AmountInput } from "@/components/amount-input"
 
 type TransferFormProps = {
     accounts: Account[]
@@ -171,18 +172,11 @@ export function TransferForm({ accounts, recurringTransactions, categories, curr
                                     />
                                 </div>
 
-                                <div className="flex justify-center py-6">
-                                    <div className="flex items-baseline gap-2 border-b border-border hover:border-foreground/50 focus-within:border-foreground transition-colors px-8 pb-2">
-                                        <input
-                                            type="number"
-                                            value={amount}
-                                            onChange={(e) => setAmount(e.target.value)}
-                                            className="font-bold text-4xl border-0 p-0 focus:ring-0 focus:outline-none min-w-[200px] max-w-[200px] text-center bg-transparent placeholder:text-muted-foreground/20 caret-primary"
-                                            placeholder="0"
-                                        />
-                                        <span className="text-3xl text-gray-400 font-bold self-center">{currency}</span>
-                                    </div>
-                                </div>
+                                <AmountInput
+                                    value={amount}
+                                    onChange={setAmount}
+                                    currency={currency}
+                                />
 
                                 <Button type="submit" disabled={isLoading} className="w-full mt-4">
                                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

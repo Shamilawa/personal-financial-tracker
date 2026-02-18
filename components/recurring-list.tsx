@@ -160,50 +160,48 @@ export function RecurringList({ transactions, accounts, currency = "$" }: Recurr
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-2">
-                                                <div className="text-right mr-2 hidden sm:block min-w-[60px]">
-                                                    {tx.amount ? (
-                                                        <p className="font-bold">
-                                                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}
-                                                        </p>
-                                                    ) : (
-                                                        <p className="text-xs text-muted-foreground italic">Variable</p>
-                                                    )}
-                                                </div>
-
-                                                <Button
-                                                    size="sm"
-                                                    variant={due ? "default" : "outline"}
-                                                    className="h-8 gap-1"
-                                                    onClick={() => handlePayClick(tx)}
-                                                    disabled={isLoadingId === tx.id}
-                                                >
-                                                    {isLoadingId === tx.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
-                                                    Pay
-                                                </Button>
-
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/90">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Stop Recurring Payment?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                This will permanently delete this recurring rule. Past transactions created by this rule will remain.
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                            <AlertDialogAction onClick={() => handleDelete(tx.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                                                Stop Payment
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
+                                            <div className="text-right mr-2 hidden sm:block min-w-[60px]">
+                                                {tx.amount ? (
+                                                    <p className="font-bold">
+                                                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: currency === "$" ? 'USD' : currency }).format(tx.amount).replace('USD', '$')}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-xs text-muted-foreground italic">Variable</p>
+                                                )}
                                             </div>
+
+                                            <Button
+                                                size="sm"
+                                                variant={due ? "default" : "outline"}
+                                                className="h-8 gap-1"
+                                                onClick={() => handlePayClick(tx)}
+                                                disabled={isLoadingId === tx.id}
+                                            >
+                                                {isLoadingId === tx.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+                                                Pay
+                                            </Button>
+
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/90">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Stop Recurring Payment?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            This will permanently delete this recurring rule. Past transactions created by this rule will remain.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleDelete(tx.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                                            Stop Payment
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
                                         </div>
                                     )
                                 })}
@@ -211,7 +209,7 @@ export function RecurringList({ transactions, accounts, currency = "$" }: Recurr
                         </div>
                     )
                 })}
-            </div>
+            </div >
 
             <TransactionConfirmationDialog
                 open={showPayConfirm}
@@ -221,6 +219,7 @@ export function RecurringList({ transactions, accounts, currency = "$" }: Recurr
                 title="Confirm Recurring Payment"
                 isLoading={!!isLoadingId}
                 editableAmount={true}
+                currency={currency}
                 details={confirmPayItem ? {
                     sourceAccountId: confirmPayItem.account_id,
                     targetAccountId: confirmPayItem.to_account_id,
