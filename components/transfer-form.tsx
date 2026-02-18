@@ -37,9 +37,10 @@ type TransferFormProps = {
     accounts: Account[]
     recurringTransactions: RecurringTransaction[]
     categories: Category[]
+    currency: string
 }
 
-export function TransferForm({ accounts, recurringTransactions, categories }: TransferFormProps) {
+export function TransferForm({ accounts, recurringTransactions, categories, currency }: TransferFormProps) {
     const [open, setOpen] = useState(false)
     const [activeTab, setActiveTab] = useState("transfer")
 
@@ -159,19 +160,6 @@ export function TransferForm({ accounts, recurringTransactions, categories }: Tr
                                     </div>
                                 </div>
 
-                                <div className="flex justify-center py-6">
-                                    <div className="flex items-baseline gap-1 border-b border-border hover:border-foreground/50 focus-within:border-foreground transition-colors px-8 pb-2">
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            value={amount}
-                                            onChange={(e) => setAmount(e.target.value)}
-                                            className="font-bold text-6xl h-auto border-0 p-0 focus-visible:ring-0 w-[240px] text-center bg-transparent shadow-none placeholder:text-muted-foreground/20"
-                                            placeholder="0"
-                                        />
-                                        <span className="text-4xl text-muted-foreground font-medium">$</span>
-                                    </div>
-                                </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="date">Date</Label>
                                     <Input
@@ -181,6 +169,19 @@ export function TransferForm({ accounts, recurringTransactions, categories }: Tr
                                         onChange={(e) => setDate(e.target.value)}
                                         required
                                     />
+                                </div>
+
+                                <div className="flex justify-center py-6">
+                                    <div className="flex items-baseline gap-2 border-b border-border hover:border-foreground/50 focus-within:border-foreground transition-colors px-8 pb-2">
+                                        <input
+                                            type="number"
+                                            value={amount}
+                                            onChange={(e) => setAmount(e.target.value)}
+                                            className="font-bold text-4xl border-0 p-0 focus:ring-0 focus:outline-none min-w-[200px] max-w-[200px] text-center bg-transparent placeholder:text-muted-foreground/20 caret-primary"
+                                            placeholder="0"
+                                        />
+                                        <span className="text-3xl text-gray-400 font-bold self-center">{currency}</span>
+                                    </div>
                                 </div>
 
                                 <Button type="submit" disabled={isLoading} className="w-full mt-4">
@@ -194,7 +195,7 @@ export function TransferForm({ accounts, recurringTransactions, categories }: Tr
                             <div className="flex justify-end">
                                 <CreateRecurringDialog accounts={accounts} categories={categories} />
                             </div>
-                            <RecurringList transactions={recurringTransactions} accounts={accounts} />
+                            <RecurringList transactions={recurringTransactions} accounts={accounts} currency={currency} />
                         </TabsContent>
                     </Tabs>
                 </DialogContent>
@@ -207,6 +208,7 @@ export function TransferForm({ accounts, recurringTransactions, categories }: Tr
                 details={confirmDetails}
                 accounts={accounts}
                 isLoading={isLoading}
+                currency={currency}
             />
         </>
     )

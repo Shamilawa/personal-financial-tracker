@@ -23,9 +23,10 @@ import { isBefore, parseISO, startOfDay, isToday, isTomorrow, isThisWeek, isThis
 type RecurringListProps = {
     transactions: RecurringTransaction[]
     accounts: Account[]
+    currency?: string // Made optional to avoid breaking other usages if any
 }
 
-export function RecurringList({ transactions, accounts }: RecurringListProps) {
+export function RecurringList({ transactions, accounts, currency = "$" }: RecurringListProps) {
 
     const [isLoadingId, setIsLoadingId] = useState<string | null>(null)
     const [confirmPayItem, setConfirmPayItem] = useState<RecurringTransaction | null>(null)
@@ -140,8 +141,8 @@ export function RecurringList({ transactions, accounts }: RecurringListProps) {
                                             <div className="flex flex-col gap-1 overflow-hidden">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase ${tx.type === 'income' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                                            tx.type === 'expense' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                                'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                                        tx.type === 'expense' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                            'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                                                         }`}>
                                                         {tx.type}
                                                     </span>

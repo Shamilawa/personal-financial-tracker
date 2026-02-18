@@ -34,6 +34,7 @@ type TransactionConfirmationDialogProps = {
     isLoading?: boolean;
     title?: string;
     editableAmount?: boolean;
+    currency?: string;
 }
 
 export function TransactionConfirmationDialog({
@@ -44,16 +45,13 @@ export function TransactionConfirmationDialog({
     accounts,
     isLoading = false,
     title = "Confirm Transaction",
-    editableAmount = false
+    editableAmount = false,
+    currency = "$"
 }: TransactionConfirmationDialogProps) {
     const [amountStr, setAmountStr] = useState("")
 
     useEffect(() => {
         if (open && details) {
-            // Only set initial value when opening.
-            // If details.amount is 0 or undefined, set to empty string for cleaner input? 
-            // Or keep 0 if it's explicitly 0.
-            // If details.amount is undefined (variable), it's empty.
             setAmountStr(details.amount !== undefined && details.amount !== null ? details.amount.toString() : "")
         }
     }, [open])
@@ -65,7 +63,20 @@ export function TransactionConfirmationDialog({
 
     // Helper to format currency
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency === "$" ? 'USD' : currency }).format(amount).replace('USD', '$');
+        // Quick fallback for formatting. Ideally we use the currency code.
+        // If currency is just a symbol like "$", Intl might not like it.
+        // But in our app currency is likely "USD", "EUR" etc.
+        // If currency IS the code (e.g. USD), straightforward.
+    }
+
+    // Better formatted wrapper
+    const displayCurrency = (val: number) => {
+        try {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(val);
+        } catch {
+            return `${currency}${val.toFixed(2)}`;
+        }
     }
 
     return (
@@ -88,23 +99,24 @@ export function TransactionConfirmationDialog({
                         <span className="text-muted-foreground">Amount</span>
                         {editableAmount ? (
                             <div className="w-full flex justify-center py-4">
-                                <div className="flex items-baseline gap-1 border-b border-border hover:border-foreground/50 focus-within:border-foreground transition-colors px-4 pb-1">
-                                    <Input
+                                <div className="flex items-baseline gap-2 border-b border-border hover:border-foreground/50 focus-within:border-foreground transition-colors px-4 pb-1">
+                                    <span className="text-3xl text-muted-foreground font-medium self-center">{currency}</span>
+                                    <input
                                         type="number"
                                         step="0.01"
                                         value={amountStr}
                                         onChange={(e) => setAmountStr(e.target.value)}
-                                        className="text-right font-bold text-5xl h-auto border-0 p-0 focus-visible:ring-0 w-[180px] text-center bg-transparent shadow-none"
+                                        className="text-right font-bold text-6xl border-0 p-0 focus:ring-0 focus:outline-none w-[180px] text-left bg-transparent placeholder:text-muted-foreground/20 caret-primary"
                                         placeholder="0"
                                         autoFocus
                                     />
-                                    <span className="text-3xl text-muted-foreground font-medium">$</span>
                                 </div>
                             </div>
                         ) : (
-                            <span className="font-bold text-lg">{formatCurrency(details.amount || 0)}</span>
+                            <span className="font-bold text-lg">{displayCurrency(details.amount || 0)}</span>
                         )}
                     </div>
+// ... rest of component
 
                     {details.type === 'transfer' ? (
                         <>

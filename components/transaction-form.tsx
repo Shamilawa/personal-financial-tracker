@@ -273,16 +273,16 @@ export function TransactionForm({ categories, accounts, currency, defaultAccount
           </div>
 
           <div className="flex justify-center py-6">
-            <div className="flex items-baseline gap-1 border-b border-border hover:border-foreground/50 focus-within:border-foreground transition-colors px-8 pb-2">
-              <Input
+            <div className="flex items-baseline gap-2 border-b border-border hover:border-foreground/50 focus-within:border-foreground transition-colors px-8 pb-2">
+              <span className="text-3xl text-muted-foreground font-medium self-center">{currencySymbol}</span>
+              <input
                 type="number"
                 step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="font-bold text-6xl h-auto border-0 p-0 focus-visible:ring-0 w-[240px] text-center bg-transparent shadow-none placeholder:text-muted-foreground/20"
+                className="font-bold text-6xl border-0 p-0 focus:ring-0 focus:outline-none w-[240px] text-left bg-transparent placeholder:text-muted-foreground/20 caret-primary"
                 placeholder="0"
               />
-              <span className="text-4xl text-muted-foreground font-medium">{currency}</span>
             </div>
           </div>
 
