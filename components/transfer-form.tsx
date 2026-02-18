@@ -131,12 +131,12 @@ export function TransferForm({ accounts, recurringTransactions, categories, curr
                 <DialogTrigger asChild>
                     <Button variant="secondary" className="gap-2">
                         <ArrowRightLeft className="h-4 w-4" />
-                        Move Money
+                        Transfer Funds
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px] h-[80vh] sm:h-auto overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Move Money</DialogTitle>
+                        <DialogTitle>Transfer Funds</DialogTitle>
                         <DialogDescription>
                             Transfer funds between accounts or manage recurring payments.
                         </DialogDescription>

@@ -21,6 +21,7 @@ import {
 import { Loader2 } from "lucide-react"
 import { payDebt } from "@/lib/debt-actions"
 import { toast } from "sonner"
+import { AmountInput } from "@/components/amount-input"
 
 
 // We need to ensure we have the correct types. 
@@ -76,9 +77,17 @@ export function DebtPaymentDialog({ open, onOpenChange, debt, accounts, currency
         }
     }
 
+
+
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "USD" }).format(val)
     }
+
+    // Helper to get currency code
+    const currencyCode = currency || "USD";
+
+    const amountVal = Number(amount)
+    const isFormValid = !loading && !!debt && !!accountId && !!date && !isNaN(amountVal) && amountVal > 0
 
     if (!debt) return null
 
@@ -100,7 +109,7 @@ export function DebtPaymentDialog({ open, onOpenChange, debt, accounts, currency
                     <div className="grid gap-2">
                         <Label htmlFor="account">Pay From Account</Label>
                         <Select value={accountId} onValueChange={setAccountId}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select account" />
                             </SelectTrigger>
                             <SelectContent>
@@ -113,18 +122,7 @@ export function DebtPaymentDialog({ open, onOpenChange, debt, accounts, currency
                         </Select>
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="amount">Amount</Label>
-                        <Input
-                            id="amount"
-                            type="number"
-                            step="0.01"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            placeholder="0.00"
-                            required
-                        />
-                    </div>
+
 
                     <div className="grid gap-2">
                         <Label htmlFor="date">Date</Label>
@@ -137,11 +135,17 @@ export function DebtPaymentDialog({ open, onOpenChange, debt, accounts, currency
                         />
                     </div>
 
+                    <AmountInput
+                        value={amount}
+                        onChange={setAmount}
+                        currency={currencyCode}
+                    />
+
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={loading}>
+                        <Button type="submit" disabled={!isFormValid}>
                             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Confirm Payment
                         </Button>
