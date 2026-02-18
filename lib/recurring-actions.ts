@@ -6,7 +6,7 @@ import { RecurringTransaction } from './definitions';
 import { addTransaction } from './actions';
 import { addDays, addWeeks, addMonths, addYears, format, isBefore, isSameDay, parseISO } from 'date-fns';
 
-// 1. Ensure Table Exists
+// 1. Ensure Table Exists & Migrate
 export async function ensureRecurringTable() {
     try {
         await sql`
@@ -17,7 +17,7 @@ export async function ensureRecurringTable() {
                 type VARCHAR(20) NOT NULL CHECK (type IN ('income', 'expense', 'transfer')),
                 category VARCHAR(255) NOT NULL,
                 description TEXT,
-                amount DECIMAL(10, 2) NOT NULL,
+                amount DECIMAL(10, 2), -- Can be NULL now
                 interval_unit VARCHAR(10) NOT NULL CHECK (interval_unit IN ('day', 'week', 'month', 'year')),
                 interval_value INTEGER NOT NULL DEFAULT 1,
                 start_date DATE NOT NULL,
@@ -30,6 +30,18 @@ export async function ensureRecurringTable() {
         `;
         // Create index for performance
         await sql`CREATE INDEX IF NOT EXISTS idx_next_run_date ON recurring_transactions(next_run_date) WHERE is_active = TRUE;`;
+
+        // MIGRATION: Ensure amount is nullable (Idempotent-ish)
+        // Note: ALTER COLUMN in Postgres inside a conditional block is tricky in raw SQL without PL/pgSQL.
+        // But running ALTER COLUMN ... DROP NOT NULL is safe even if it's already nullable.
+        try {
+            await sql`ALTER TABLE recurring_transactions ALTER COLUMN amount DROP NOT NULL;`;
+        } catch (e) {
+            // Ignore error if table didn't exist before this run (it would be created with nullable amount above)
+            // or if other issues. ideally we check information_schema but this is quick & dirty for this context.
+            // console.log("Migration note:", e);
+        }
+
         console.log("Recurring transactions table ensured.");
     } catch (error) {
         console.error("Failed to ensure recurring table:", error);
@@ -45,7 +57,7 @@ export async function getRecurringTransactions(): Promise<RecurringTransaction[]
         `;
         return data.rows.map(row => ({
             ...row,
-            amount: Number(row.amount),
+            amount: row.amount != null ? Number(row.amount) : undefined,
             start_date: format(row.start_date, 'yyyy-MM-dd'),
             next_run_date: format(row.next_run_date, 'yyyy-MM-dd'),
             last_run_date: row.last_run_date ? format(row.last_run_date, 'yyyy-MM-dd') : undefined,
@@ -71,7 +83,7 @@ export async function addRecurringTransaction(data: Omit<RecurringTransaction, '
                 interval_unit, interval_value, start_date, next_run_date, end_date
             )
             VALUES (
-                ${account_id}, ${to_account_id || null}, ${type}, ${category}, ${description}, ${amount},
+                ${account_id}, ${to_account_id || null}, ${type}, ${category}, ${description}, ${amount ?? null},
                 ${interval_unit}, ${interval_value}, ${start_date}, ${next_run_date}, ${end_date || null}
             )
         `;
@@ -97,17 +109,19 @@ export async function deleteRecurringTransaction(id: string) {
 
 
 // 5. TRIGGER MANUAL PAYMENT
-export async function triggerRecurringTransaction(id: string) {
+export async function triggerRecurringTransaction(id: string, amountOverride?: number) {
     try {
         // Fetch item
         const result = await sql<RecurringTransaction>`SELECT * FROM recurring_transactions WHERE id = ${id}`;
         if (result.rowCount === 0) return { error: "Transaction not found" };
 
         const item = result.rows[0];
+        const finalAmount = amountOverride !== undefined ? amountOverride : Number(item.amount);
 
-        // 1. Create Transaction (Effective Date = Today, or next_run_date? Let's use Today as user is paying NOW)
-        // User requested "As soon as user clicked on Pay... confirmation...". 
-        // This function is called AFTER confirmation.
+        if (!finalAmount && finalAmount !== 0) {
+            return { error: "Amount is required" };
+        }
+
         const dateStr = format(new Date(), 'yyyy-MM-dd');
 
         if (item.type === 'transfer' && item.to_account_id) {
@@ -117,7 +131,7 @@ export async function triggerRecurringTransaction(id: string) {
                 type: 'expense',
                 category: 'Transfer',
                 description: `Recurring Transfer to ${item.to_account_id} (${item.description})`,
-                amount: Number(item.amount),
+                amount: finalAmount,
                 date: dateStr
             });
             await addTransaction({
@@ -125,7 +139,7 @@ export async function triggerRecurringTransaction(id: string) {
                 type: 'income',
                 category: 'Transfer',
                 description: `Recurring Transfer from ${item.account_id} (${item.description})`,
-                amount: Number(item.amount),
+                amount: finalAmount,
                 date: dateStr
             });
         } else {
@@ -135,13 +149,12 @@ export async function triggerRecurringTransaction(id: string) {
                 type: item.type as "income" | "expense",
                 category: item.category,
                 description: `Recurring: ${item.description}`,
-                amount: Number(item.amount),
+                amount: finalAmount,
                 date: dateStr
             });
         }
 
-        // 2. Calculate NEXT Date (Advance from previous next_run_date, or from Today?)
-        // Standard practice: maintain the original schedule. If it was due on 1st, and paid on 3rd, next is due on 1st next month.
+        // 2. Calculate NEXT Date
         const currentRunDate = parseISO(format(item.next_run_date, 'yyyy-MM-dd'));
         const interval = Number(item.interval_value);
         let nextDate = currentRunDate;

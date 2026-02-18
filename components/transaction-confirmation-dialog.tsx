@@ -1,23 +1,25 @@
 "use client"
 
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { Account } from "@/lib/definitions"
 import { format } from "date-fns"
 import { Loader2 } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { useState, useEffect } from "react"
+import { Label } from "@/components/ui/label"
 
 type TransactionDetails = {
     sourceAccountId: string;
     targetAccountId?: string; // For transfers
-    amount: number;
+    amount?: number;
     description: string;
     date: string;
     type: "income" | "expense" | "transfer";
@@ -26,11 +28,12 @@ type TransactionDetails = {
 type TransactionConfirmationDialogProps = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onConfirm: () => void;
+    onConfirm: (amount?: number) => void;
     details: TransactionDetails | null;
     accounts: Account[];
     isLoading?: boolean;
     title?: string;
+    editableAmount?: boolean;
 }
 
 export function TransactionConfirmationDialog({
@@ -40,8 +43,21 @@ export function TransactionConfirmationDialog({
     details,
     accounts,
     isLoading = false,
-    title = "Confirm Transaction"
+    title = "Confirm Transaction",
+    editableAmount = false
 }: TransactionConfirmationDialogProps) {
+    const [amountStr, setAmountStr] = useState("")
+
+    useEffect(() => {
+        if (open && details) {
+            // Only set initial value when opening.
+            // If details.amount is 0 or undefined, set to empty string for cleaner input? 
+            // Or keep 0 if it's explicitly 0.
+            // If details.amount is undefined (variable), it's empty.
+            setAmountStr(details.amount !== undefined && details.amount !== null ? details.amount.toString() : "")
+        }
+    }, [open])
+
     if (!details) return null;
 
     const sourceAccount = accounts.find(a => a.id === details.sourceAccountId);
@@ -53,14 +69,14 @@ export function TransactionConfirmationDialog({
     }
 
     return (
-        <AlertDialog open={open} onOpenChange={onOpenChange}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>{title}</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Please review the transaction details below.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>
+                        Please review {editableAmount ? "and enter" : ""} the transaction details below.
+                    </DialogDescription>
+                </DialogHeader>
 
                 <div className="grid gap-3 py-3 text-sm">
                     <div className="flex justify-between border-b pb-2">
@@ -68,14 +84,26 @@ export function TransactionConfirmationDialog({
                         <span className="font-medium capitalize">{details.type}</span>
                     </div>
 
-                    <div className="flex justify-between border-b pb-2">
-                        <span className="text-muted-foreground">Date</span>
-                        <span className="font-medium">{format(new Date(details.date), 'PPP')}</span>
-                    </div>
-
-                    <div className="flex justify-between border-b pb-2">
+                    <div className="flex justify-between items-center border-b pb-2">
                         <span className="text-muted-foreground">Amount</span>
-                        <span className="font-bold text-lg">{formatCurrency(details.amount)}</span>
+                        {editableAmount ? (
+                            <div className="w-full flex justify-center py-4">
+                                <div className="flex items-baseline gap-1 border-b border-border hover:border-foreground/50 focus-within:border-foreground transition-colors px-4 pb-1">
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={amountStr}
+                                        onChange={(e) => setAmountStr(e.target.value)}
+                                        className="text-right font-bold text-5xl h-auto border-0 p-0 focus-visible:ring-0 w-[180px] text-center bg-transparent shadow-none"
+                                        placeholder="0"
+                                        autoFocus
+                                    />
+                                    <span className="text-3xl text-muted-foreground font-medium">$</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <span className="font-bold text-lg">{formatCurrency(details.amount || 0)}</span>
+                        )}
                     </div>
 
                     {details.type === 'transfer' ? (
@@ -102,17 +130,17 @@ export function TransactionConfirmationDialog({
                     </div>
                 </div>
 
-                <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={(e) => {
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
+                    <Button onClick={(e) => {
                         e.preventDefault();
-                        onConfirm();
-                    }} disabled={isLoading}>
+                        onConfirm(amountStr ? Number(amountStr) : undefined);
+                    }} disabled={isLoading || (editableAmount && !amountStr)}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Confirm Payment
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     )
 }

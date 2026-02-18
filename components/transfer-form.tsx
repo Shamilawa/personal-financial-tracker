@@ -25,21 +25,21 @@ import {
     TabsList,
     TabsTrigger,
 } from "@/components/ui/tabs"
-import { Switch } from "@/components/ui/switch"
 import { ArrowRightLeft, Loader2 } from "lucide-react"
 import { transferFunds } from "@/lib/actions"
-import { addRecurringTransaction } from "@/lib/recurring-actions"
 import { toast } from "sonner"
-import { Account, RecurringTransaction } from "@/lib/definitions"
+import { Account, RecurringTransaction, Category } from "@/lib/definitions"
 import { RecurringList } from "@/components/recurring-list"
 import { TransactionConfirmationDialog } from "@/components/transaction-confirmation-dialog"
+import { CreateRecurringDialog } from "@/components/create-recurring-dialog"
 
 type TransferFormProps = {
     accounts: Account[]
     recurringTransactions: RecurringTransaction[]
+    categories: Category[]
 }
 
-export function TransferForm({ accounts, recurringTransactions }: TransferFormProps) {
+export function TransferForm({ accounts, recurringTransactions, categories }: TransferFormProps) {
     const [open, setOpen] = useState(false)
     const [activeTab, setActiveTab] = useState("transfer")
 
@@ -49,12 +49,6 @@ export function TransferForm({ accounts, recurringTransactions }: TransferFormPr
     const [amount, setAmount] = useState("")
     const [date, setDate] = useState(new Date().toISOString().split("T")[0])
     const [isLoading, setIsLoading] = useState(false)
-
-    // Recurring State
-    const [isRecurring, setIsRecurring] = useState(false)
-    const [intervalUnit, setIntervalUnit] = useState<"day" | "week" | "month" | "year">("month")
-    const [intervalValue, setIntervalValue] = useState(1)
-    const [endDate, setEndDate] = useState("")
 
     // Confirmation State
     const [showConfirm, setShowConfirm] = useState(false)
@@ -71,30 +65,16 @@ export function TransferForm({ accounts, recurringTransactions }: TransferFormPr
             return
         }
 
-        if (isRecurring) {
-            // Direct submit for creating a recurring rule? Or confirm that too?
-            // Usually creating a rule doesn't need "Payment" confirmation, but maybe "Creation" confirmation?
-            // The user asked for "Confirmation dialog... showing the From and To account...".
-            // Let's assume standard transfer needs confirmation. 
-            // Creating a recurring rule is technically not a payment YET.
-            // But let's confirm the creation if they want? 
-            // Actually, the prompt says "As soon as user clicked on the Pay button a confirmation dialog..." referring to the Recurring LIST pay button.
-            // For standard transfer, let's add confirmation too as good practice.
-
-            // For now, let's just process Creation directly, as it's not a payment.
-            processSubmit();
-        } else {
-            // Show Confirmation for One-Time Transfer
-            setConfirmDetails({
-                sourceAccountId: sourceId,
-                targetAccountId: destId,
-                amount: Number(amount),
-                description: `Transfer to ${accounts.find(a => a.id === destId)?.name}`,
-                date: date,
-                type: 'transfer'
-            })
-            setShowConfirm(true)
-        }
+        // Show Confirmation for One-Time Transfer
+        setConfirmDetails({
+            sourceAccountId: sourceId,
+            targetAccountId: destId,
+            amount: Number(amount),
+            description: `Transfer to ${accounts.find(a => a.id === destId)?.name}`,
+            date: date,
+            type: 'transfer'
+        })
+        setShowConfirm(true)
     }
 
     const processSubmit = async () => {
@@ -102,36 +82,11 @@ export function TransferForm({ accounts, recurringTransactions }: TransferFormPr
         setShowConfirm(false) // Close confirm if open
 
         try {
-            if (isRecurring) {
-                // Add Recurring Rule
-                const result = await addRecurringTransaction({
-                    account_id: sourceId,
-                    to_account_id: destId,
-                    type: 'transfer',
-                    category: 'Transfer',
-                    description: `Transfer to ${accounts.find(a => a.id === destId)?.name}`,
-                    amount: Number(amount),
-                    interval_unit: intervalUnit,
-                    interval_value: intervalValue,
-                    start_date: date,
-                    end_date: endDate || undefined
-                })
-
-                if (result.error) {
-                    toast.error(result.error)
-                } else {
-                    toast.success("Recurring transfer scheduled")
-                    setOpen(false)
-                    resetForm()
-                }
-
-            } else {
-                // One-time Transfer
-                await transferFunds(sourceId, destId, Number(amount), date)
-                toast.success("Transfer successful")
-                setOpen(false)
-                resetForm()
-            }
+            // One-time Transfer
+            await transferFunds(sourceId, destId, Number(amount), date)
+            toast.success("Transfer successful")
+            setOpen(false)
+            resetForm()
         } catch (error) {
             toast.error("Failed to process request")
         } finally {
@@ -141,7 +96,6 @@ export function TransferForm({ accounts, recurringTransactions }: TransferFormPr
 
     const resetForm = () => {
         setAmount("")
-        setIsRecurring(false)
         setSourceId("")
         setDestId("")
         // Keep date
@@ -156,7 +110,7 @@ export function TransferForm({ accounts, recurringTransactions }: TransferFormPr
                         Move Money
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[550px]">
+                <DialogContent className="sm:max-w-[600px] h-[80vh] sm:h-auto overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Move Money</DialogTitle>
                         <DialogDescription>
@@ -205,20 +159,17 @@ export function TransferForm({ accounts, recurringTransactions }: TransferFormPr
                                     </div>
                                 </div>
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="amount">Amount</Label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+                                <div className="flex justify-center py-6">
+                                    <div className="flex items-baseline gap-1 border-b border-border hover:border-foreground/50 focus-within:border-foreground transition-colors px-8 pb-2">
                                         <Input
-                                            id="amount"
                                             type="number"
                                             step="0.01"
                                             value={amount}
                                             onChange={(e) => setAmount(e.target.value)}
-                                            placeholder="0.00"
-                                            className="pl-7"
-                                            required
+                                            className="font-bold text-6xl h-auto border-0 p-0 focus-visible:ring-0 w-[240px] text-center bg-transparent shadow-none placeholder:text-muted-foreground/20"
+                                            placeholder="0"
                                         />
+                                        <span className="text-4xl text-muted-foreground font-medium">$</span>
                                     </div>
                                 </div>
                                 <div className="grid gap-2">
@@ -232,69 +183,17 @@ export function TransferForm({ accounts, recurringTransactions }: TransferFormPr
                                     />
                                 </div>
 
-                                {/* Recurring Toggle */}
-                                <div className="flex flex-col gap-4 border rounded-lg p-4 bg-muted/30">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <Label className="text-base">Recurring Transfer?</Label>
-                                            <p className="text-sm text-muted-foreground">
-                                                Schedule this transfer to repeat automatically.
-                                            </p>
-                                        </div>
-                                        <Switch
-                                            checked={isRecurring}
-                                            onCheckedChange={setIsRecurring}
-                                        />
-                                    </div>
-
-                                    {isRecurring && (
-                                        <div className="grid gap-4 pt-2 animate-in fade-in slide-in-from-top-2">
-                                            <div className="flex gap-2 items-end">
-                                                <div className="grid gap-2 flex-1">
-                                                    <Label>Repeat Every</Label>
-                                                    <div className="flex gap-2">
-                                                        <Input
-                                                            type="number"
-                                                            min="1"
-                                                            value={intervalValue}
-                                                            onChange={(e) => setIntervalValue(Number(e.target.value))}
-                                                            className="w-20"
-                                                        />
-                                                        <Select value={intervalUnit} onValueChange={(val: any) => setIntervalUnit(val)}>
-                                                            <SelectTrigger>
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="day">Day(s)</SelectItem>
-                                                                <SelectItem value="week">Week(s)</SelectItem>
-                                                                <SelectItem value="month">Month(s)</SelectItem>
-                                                                <SelectItem value="year">Year(s)</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                </div>
-                                                <div className="grid gap-2 flex-1">
-                                                    <Label>End Date (Optional)</Label>
-                                                    <Input
-                                                        type="date"
-                                                        value={endDate}
-                                                        onChange={(e) => setEndDate(e.target.value)}
-                                                        min={date}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <Button type="submit" disabled={isLoading} className="w-full mt-2">
+                                <Button type="submit" disabled={isLoading} className="w-full mt-4">
                                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                    {isRecurring ? "Schedule Recurring Transfer" : "Transfer Funds"}
+                                    Transfer Funds
                                 </Button>
                             </form>
                         </TabsContent>
 
-                        <TabsContent value="recurring" className="mt-4">
+                        <TabsContent value="recurring" className="mt-4 space-y-4">
+                            <div className="flex justify-end">
+                                <CreateRecurringDialog accounts={accounts} categories={categories} />
+                            </div>
                             <RecurringList transactions={recurringTransactions} accounts={accounts} />
                         </TabsContent>
                     </Tabs>

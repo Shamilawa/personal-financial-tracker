@@ -46,7 +46,7 @@ export type RecurringTransaction = {
     type: "income" | "expense" | "transfer";
     category: string;
     description: string;
-    amount: number;
+    amount?: number;
     interval_unit: "day" | "week" | "month" | "year";
     interval_value: number;
     start_date: string; // ISO Date

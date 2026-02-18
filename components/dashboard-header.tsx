@@ -40,7 +40,7 @@ export function DashboardHeader({
 
                 {/* Actions Group */}
                 <div className="flex items-center gap-2">
-                    <TransferForm accounts={accounts} recurringTransactions={recurringTransactions} />
+                    <TransferForm accounts={accounts} recurringTransactions={recurringTransactions} categories={categories} />
 
                     <TransactionForm
                         categories={categories}
