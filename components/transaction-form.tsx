@@ -84,6 +84,20 @@ export function TransactionForm({ categories, accounts, currency, defaultAccount
       return
     }
 
+    const val = Number.parseFloat(amount.replace(/,/g, ""))
+    if (isNaN(val) || val <= 0) {
+      toast.error("Amount must be greater than 0")
+      return
+    }
+
+    if (type === "expense") {
+      const account = accounts.find((a) => a.id === accountId)
+      if (account && account.balance < val) {
+        toast.error("Insufficient funds")
+        return
+      }
+    }
+
     setLoading(true)
     try {
       await addTransaction({
@@ -118,6 +132,15 @@ export function TransactionForm({ categories, accounts, currency, defaultAccount
   }
 
   const currencySymbol = getCurrencySymbol(currency);
+
+  const amountVal = Number.parseFloat(amount.replace(/,/g, ""))
+  const isFormValid =
+    !loading &&
+    !!accountId &&
+    !!date &&
+    (isCreatingCategory ? !!newCategoryName.trim() : !!category) &&
+    !isNaN(amountVal) &&
+    amountVal > 0;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -283,7 +306,7 @@ export function TransactionForm({ categories, accounts, currency, defaultAccount
             currency={currencySymbol}
           />
 
-          <Button type="submit" className="mt-2" disabled={loading}>
+          <Button type="submit" className="mt-2" disabled={!isFormValid}>
             {loading ? "Adding..." : "Add Transaction"}
           </Button>
         </form>

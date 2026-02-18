@@ -67,6 +67,18 @@ export function TransferForm({ accounts, recurringTransactions, categories, curr
             return
         }
 
+        const val = Number(amount)
+        if (isNaN(val) || val <= 0) {
+            toast.error("Amount must be greater than 0")
+            return
+        }
+
+        const sourceAccount = accounts.find((a) => a.id === sourceId)
+        if (sourceAccount && sourceAccount.balance < val) {
+            toast.error("Insufficient funds in source account")
+            return
+        }
+
         // Show Confirmation for One-Time Transfer
         setConfirmDetails({
             sourceAccountId: sourceId,
@@ -102,6 +114,16 @@ export function TransferForm({ accounts, recurringTransactions, categories, curr
         setDestId("")
         // Keep date
     }
+
+    const amountVal = Number(amount)
+    const isFormValid =
+        !isLoading &&
+        !!sourceId &&
+        !!destId &&
+        sourceId !== destId &&
+        !!date &&
+        !isNaN(amountVal) &&
+        amountVal > 0
 
     return (
         <>
@@ -178,7 +200,7 @@ export function TransferForm({ accounts, recurringTransactions, categories, curr
                                     currency={currency}
                                 />
 
-                                <Button type="submit" disabled={isLoading} className="w-full mt-4">
+                                <Button type="submit" disabled={!isFormValid} className="w-full mt-4">
                                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                     Transfer Funds
                                 </Button>

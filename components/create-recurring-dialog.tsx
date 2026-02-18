@@ -69,6 +69,11 @@ export function CreateRecurringDialog({ accounts, categories, onTransactionAdded
             return
         }
 
+        if (intervalValue <= 0) {
+            toast.error("Interval must be at least 1")
+            return
+        }
+
         setIsLoading(true)
         try {
             const result = await addRecurringTransaction({
@@ -105,6 +110,12 @@ export function CreateRecurringDialog({ accounts, categories, onTransactionAdded
         // Keep repetitive settings for convenience?
         // Maybe reset category/accounts
     }
+
+    const isBasicValid = !!accountId && !!description && !!startDate && intervalValue >= 1;
+    const isTypeValid = type === 'transfer'
+        ? (!!toAccountId && accountId !== toAccountId)
+        : !!categoryId;
+    const isFormValid = !isLoading && isBasicValid && isTypeValid;
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -269,7 +280,7 @@ export function CreateRecurringDialog({ accounts, categories, onTransactionAdded
                         </div>
                     </div>
 
-                    <Button type="submit" disabled={isLoading} className="w-full mt-4">
+                    <Button type="submit" disabled={!isFormValid} className="w-full mt-4">
                         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         Create Recurring Rule
                     </Button>
