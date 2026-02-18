@@ -150,7 +150,7 @@ export function TransferForm({ accounts, recurringTransactions, categories, curr
 
                         <TabsContent value="transfer">
                             <form onSubmit={handleFormSubmit} className="grid gap-4 py-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="source">From</Label>
                                         <Select value={sourceId} onValueChange={setSourceId}>

@@ -34,7 +34,7 @@ export function DataTable<T>({
     emptyMessage = "No results.",
 }: DataTableProps<T>) {
     return (
-        <div className="rounded-md border">
+        <div className="rounded-md border overflow-x-auto">
             <Table>
                 <TableHeader>
                     <TableRow>
