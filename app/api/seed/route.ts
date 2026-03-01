@@ -1,5 +1,6 @@
 import { sql } from '@vercel/postgres';
 import { NextResponse } from 'next/server';
+import { ensureRecurringTable } from '@/lib/recurring-actions';
 
 export async function GET() {
   try {
@@ -113,6 +114,25 @@ export async function GET() {
     if (Number(settingsCount.rows[0].count) === 0) {
       await sql`INSERT INTO settings (cycle_start_day, currency) VALUES (1, 'USD')`;
     }
+
+    // 5. Create Debts Table
+    await sql`
+      CREATE TABLE IF NOT EXISTS debts (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        total_amount NUMERIC(15, 2) NOT NULL,
+        current_balance NUMERIC(15, 2) NOT NULL,
+        interest_rate NUMERIC(5, 2) DEFAULT 0.00,
+        minimum_payment NUMERIC(15, 2) DEFAULT 0.00,
+        due_date DATE,
+        start_date DATE,
+        notes TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    // 6. Ensure Recurring Transactions Table
+    await ensureRecurringTable();
 
     return NextResponse.json({ message: "Database seeded and migrated successfully" }, { status: 200 });
   } catch (error) {

@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Transaction } from "@/lib/definitions"
 
 type CategoryBreakdownProps = {
@@ -63,28 +64,30 @@ export function CategoryBreakdown({ transactions, currency }: CategoryBreakdownP
             No expenses recorded yet.
           </p>
         ) : (
-          <div className="space-y-4">
-            {sortedCategories.map((item, index) => (
-              <div key={item.category} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{item.category}</span>
-                  <span className="text-muted-foreground">
-                    {formatCurrency(item.amount)} ({item.percentage.toFixed(1)}%)
-                  </span>
+          <ScrollArea className="h-[300px] pr-4">
+            <div className="space-y-4">
+              {sortedCategories.map((item, index) => (
+                <div key={item.category} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">{item.category}</span>
+                    <span className="text-muted-foreground">
+                      {formatCurrency(item.amount)} ({item.percentage.toFixed(1)}%)
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <Progress
+                      value={item.percentage}
+                      className="h-2 bg-secondary"
+                    />
+                    <div
+                      className={`absolute top-0 left-0 h-2 rounded-full ${getCategoryColor(index)}`}
+                      style={{ width: `${item.percentage}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="relative">
-                  <Progress
-                    value={item.percentage}
-                    className="h-2 bg-secondary"
-                  />
-                  <div
-                    className={`absolute top-0 left-0 h-2 rounded-full ${getCategoryColor(index)}`}
-                    style={{ width: `${item.percentage}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </ScrollArea>
         )}
       </CardContent>
     </Card>
