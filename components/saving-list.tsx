@@ -17,8 +17,6 @@ import { SavingsGoal, Account } from "@/lib/definitions"
 import { deleteSavingsGoal } from "@/lib/saving-actions"
 import { toast } from "sonner"
 import { SavingForm } from "./saving-form"
-import { SavingAddFundsDialog } from "./saving-add-funds-dialog"
-
 type SavingListProps = {
     goals: SavingsGoal[]
     currency: string
@@ -28,8 +26,6 @@ type SavingListProps = {
 export function SavingList({ goals, currency, accounts }: SavingListProps) {
     const [editingGoal, setEditingGoal] = useState<SavingsGoal | null>(null)
     const [isEditOpen, setIsEditOpen] = useState(false)
-    const [fundingGoal, setFundingGoal] = useState<SavingsGoal | null>(null)
-    const [isFundingOpen, setIsFundingOpen] = useState(false)
 
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this goal?")) {
@@ -68,9 +64,10 @@ export function SavingList({ goals, currency, accounts }: SavingListProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {goals.map((goal) => {
-                const percent = Math.max(0, Math.min(100, (goal.current_balance / goal.target_amount) * 100)) || 0
-                const isComplete = percent >= 100
                 const linkedAccount = accounts.find(a => a.id === goal.linked_account_id)
+                const currentBalance = linkedAccount ? linkedAccount.balance : 0
+                const percent = Math.max(0, Math.min(100, (currentBalance / goal.target_amount) * 100)) || 0
+                const isComplete = percent >= 100
 
                 return (
                     <Card key={goal.id} className="flex flex-col h-full overflow-hidden transition-all hover:shadow-md">
@@ -87,14 +84,6 @@ export function SavingList({ goals, currency, accounts }: SavingListProps) {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem
-                                            onClick={() => {
-                                                setFundingGoal(goal)
-                                                setIsFundingOpen(true)
-                                            }}
-                                        >
-                                            <Plus className="mr-2 h-4 w-4" /> Add Funds
-                                        </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={() => {
                                                 setEditingGoal(goal)
@@ -116,7 +105,7 @@ export function SavingList({ goals, currency, accounts }: SavingListProps) {
 
                             <div className="mt-4 flex items-baseline gap-2">
                                 <span className="text-3xl font-extrabold tracking-tight">
-                                    {formatCurrency(goal.current_balance)}
+                                    {formatCurrency(currentBalance)}
                                 </span>
                                 <span className="text-sm font-medium text-muted-foreground">
                                     of {formatCurrency(goal.target_amount)}
@@ -136,7 +125,7 @@ export function SavingList({ goals, currency, accounts }: SavingListProps) {
                                             {isComplete ? "Goal Reached! 🎉" : `${percent.toFixed(1)}%`}
                                         </span>
                                         {!isComplete && (
-                                            <span>{formatCurrency(Math.max(0, goal.target_amount - goal.current_balance))} to go</span>
+                                            <span>{formatCurrency(Math.max(0, goal.target_amount - currentBalance))} to go</span>
                                         )}
                                     </div>
                                 </div>
@@ -157,19 +146,6 @@ export function SavingList({ goals, currency, accounts }: SavingListProps) {
                                 </div>
                             </div>
                         </CardContent>
-
-                        <CardFooter className="pt-2 pb-4 px-6 border-t bg-muted/10">
-                            <Button
-                                variant={isComplete ? "outline" : "secondary"}
-                                className="w-full font-semibold shadow-sm"
-                                onClick={() => {
-                                    setFundingGoal(goal)
-                                    setIsFundingOpen(true)
-                                }}
-                            >
-                                <Plus className="mr-2 h-4 w-4" /> {isComplete ? "Add More Funds" : "Add Funds"}
-                            </Button>
-                        </CardFooter>
                     </Card>
                 )
             })}
@@ -183,17 +159,6 @@ export function SavingList({ goals, currency, accounts }: SavingListProps) {
                     if (!open) setEditingGoal(null)
                 }}
                 goalToEdit={editingGoal || undefined}
-            />
-
-            <SavingAddFundsDialog
-                open={isFundingOpen}
-                onOpenChange={(open) => {
-                    setIsFundingOpen(open)
-                    if (!open) setFundingGoal(null)
-                }}
-                goal={fundingGoal}
-                accounts={accounts}
-                currency={currency}
             />
         </div>
     )

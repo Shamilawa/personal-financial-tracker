@@ -53,7 +53,6 @@ export function SavingForm({ accounts, currency, goalToEdit, open: controlledOpe
 
     const [name, setName] = useState("")
     const [targetAmount, setTargetAmount] = useState("")
-    const [currentBalance, setCurrentBalance] = useState("0")
     const [targetDate, setTargetDate] = useState("")
     const [linkedAccountId, setLinkedAccountId] = useState("")
     const [notes, setNotes] = useState("")
@@ -63,7 +62,6 @@ export function SavingForm({ accounts, currency, goalToEdit, open: controlledOpe
         if (goalToEdit) {
             setName(goalToEdit.name)
             setTargetAmount(goalToEdit.target_amount.toString())
-            setCurrentBalance(goalToEdit.current_balance.toString())
             setTargetDate(goalToEdit.target_date || "")
             setLinkedAccountId(goalToEdit.linked_account_id)
             setNotes(goalToEdit.notes || "")
@@ -71,7 +69,6 @@ export function SavingForm({ accounts, currency, goalToEdit, open: controlledOpe
             if (open) {
                 setName("")
                 setTargetAmount("")
-                setCurrentBalance("0")
                 setTargetDate("")
 
                 // Pre-select the first 'saving' or 'main' account
@@ -102,7 +99,7 @@ export function SavingForm({ accounts, currency, goalToEdit, open: controlledOpe
             const goalData = {
                 name,
                 target_amount: numericTarget,
-                current_balance: Number(currentBalance) || 0,
+                current_balance: goalToEdit ? goalToEdit.current_balance : 0,
                 target_date: targetDate || undefined,
                 linked_account_id: linkedAccountId,
                 notes,
@@ -165,18 +162,6 @@ export function SavingForm({ accounts, currency, goalToEdit, open: controlledOpe
                                 value={targetAmount}
                                 onChange={(e) => setTargetAmount(e.target.value)}
                                 required
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="currentBalance">Initial/Current Saved</Label>
-                            <Input
-                                id="currentBalance"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                placeholder={formatCurrencyPlaceholder()}
-                                value={currentBalance}
-                                onChange={(e) => setCurrentBalance(e.target.value)}
                             />
                         </div>
                     </div>
