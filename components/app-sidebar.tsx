@@ -3,7 +3,7 @@
 import * as React from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { LayoutDashboard, Settings, Wallet, Loader2 } from "lucide-react"
+import { LayoutDashboard, Settings, Wallet, Loader2, Target } from "lucide-react"
 import { InstallPWAButton } from "@/components/install-pwa-button"
 
 import {
@@ -26,6 +26,11 @@ const items = [
         title: "Debts",
         url: "/debt",
         icon: Wallet,
+    },
+    {
+        title: "Savings Goals",
+        url: "/saving",
+        icon: Target,
     },
 ]
 

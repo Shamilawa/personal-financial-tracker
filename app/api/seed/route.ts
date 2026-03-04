@@ -134,6 +134,20 @@ export async function GET() {
     // 6. Ensure Recurring Transactions Table
     await ensureRecurringTable();
 
+    // 7. Create Savings Goals Table
+    await sql`
+      CREATE TABLE IF NOT EXISTS savings_goals (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        target_amount NUMERIC(15, 2) NOT NULL,
+        current_balance NUMERIC(15, 2) DEFAULT 0.00,
+        target_date DATE,
+        linked_account_id UUID REFERENCES accounts(id),
+        notes TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
     return NextResponse.json({ message: "Database seeded and migrated successfully" }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 });

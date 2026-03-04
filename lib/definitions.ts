@@ -39,6 +39,17 @@ export type Debt = {
     notes?: string;
 };
 
+export type SavingsGoal = {
+    id: string; // UUID
+    name: string;
+    target_amount: number;
+    current_balance: number;
+    target_date?: string; // ISO Date string YYYY-MM-DD
+    linked_account_id: string; // UUID
+    notes?: string;
+    created_at?: string; // ISO Date
+};
+
 export type RecurringTransaction = {
     id: string; // UUID
     account_id: string; // UUID (Source)
