@@ -65,7 +65,7 @@ export function DebtPaymentDialog({ open, onOpenChange, debt, accounts, currency
             await payDebt(
                 debt.id,
                 accountId,
-                Number(amount),
+                Number(amount.replace(/,/g, "")),
                 date
             )
             toast.success("Payment recorded successfully")
@@ -86,7 +86,7 @@ export function DebtPaymentDialog({ open, onOpenChange, debt, accounts, currency
     // Helper to get currency code
     const currencyCode = currency || "USD";
 
-    const amountVal = Number(amount)
+    const amountVal = Number(amount.replace(/,/g, ""))
     const isFormValid = !loading && !!debt && !!accountId && !!date && !isNaN(amountVal) && amountVal > 0
 
     if (!debt) return null

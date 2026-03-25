@@ -67,7 +67,7 @@ export function TransferForm({ accounts, recurringTransactions, categories, curr
             return
         }
 
-        const val = Number(amount)
+        const val = Number(amount.replace(/,/g, ""))
         if (isNaN(val) || val <= 0) {
             toast.error("Amount must be greater than 0")
             return
@@ -83,7 +83,7 @@ export function TransferForm({ accounts, recurringTransactions, categories, curr
         setConfirmDetails({
             sourceAccountId: sourceId,
             targetAccountId: destId,
-            amount: Number(amount),
+            amount: Number(amount.replace(/,/g, "")),
             description: `Transfer to ${accounts.find(a => a.id === destId)?.name}`,
             date: date,
             type: 'transfer'
@@ -97,7 +97,7 @@ export function TransferForm({ accounts, recurringTransactions, categories, curr
 
         try {
             // One-time Transfer
-            await transferFunds(sourceId, destId, Number(amount), date)
+            await transferFunds(sourceId, destId, Number(amount.replace(/,/g, "")), date)
             toast.success("Transfer successful")
             setOpen(false)
             resetForm()
@@ -115,7 +115,7 @@ export function TransferForm({ accounts, recurringTransactions, categories, curr
         // Keep date
     }
 
-    const amountVal = Number(amount)
+    const amountVal = Number(amount.replace(/,/g, ""))
     const isFormValid =
         !isLoading &&
         !!sourceId &&
